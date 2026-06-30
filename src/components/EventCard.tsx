@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Calendar, MapPin, Users, DollarSign, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Event, categoryIcons } from "@/types/event";
 import { useLanguage, useDateLocale } from "@/i18n/LanguageContext";
 
@@ -74,9 +74,9 @@ export default function EventCard({ event, featured = false }: EventCardProps) {
               <div className="flex items-center gap-2">
                 <Calendar size={14} className="text-saddle shrink-0" />
                 <span>
-                  {format(new Date(event.date), "EEE, MMM d, yyyy", { locale: dateLocale })}
+                  {format(parseISO(event.date), "EEE, MMM d, yyyy", { locale: dateLocale })}
                   {event.endDate &&
-                    ` - ${format(new Date(event.endDate), "MMM d, yyyy", { locale: dateLocale })}`}
+                    ` - ${format(parseISO(event.endDate), "MMM d, yyyy", { locale: dateLocale })}`}
                 </span>
               </div>
               <div className="flex items-center gap-2">

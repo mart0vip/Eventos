@@ -8,6 +8,7 @@ import { Event } from "@/types/event";
 import { getEvents, initializeEvents, searchEvents } from "@/store/events";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { parseISO } from "date-fns";
 
 type SortOption = "date-asc" | "date-desc" | "price-asc" | "price-desc" | "popular";
 
@@ -43,10 +44,10 @@ export default function EventsContent() {
 
     switch (sort) {
       case "date-asc":
-        result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        result.sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
         break;
       case "date-desc":
-        result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        result.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
         break;
       case "price-asc":
         result.sort((a, b) => a.price - b.price);

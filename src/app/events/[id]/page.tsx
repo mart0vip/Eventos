@@ -10,7 +10,7 @@ import { Event, categoryIcons } from "@/types/event";
 import { getEvent, getEvents, initializeEvents } from "@/store/events";
 import { useLanguage, useDateLocale } from "@/i18n/LanguageContext";
 import EventCard from "@/components/EventCard";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import {
   Calendar,
   Clock,
@@ -157,11 +157,11 @@ export default function EventDetailPage() {
                   <div>
                     <p className="font-semibold text-stable text-sm">{t("eventDetail.date")}</p>
                     <p className="text-stable-light text-sm">
-                      {format(new Date(event.date), "EEEE, MMMM d, yyyy", { locale: dateLocale })}
+                      {format(parseISO(event.date), "EEEE, MMMM d, yyyy", { locale: dateLocale })}
                       {event.endDate && (
                         <>
                           <br />
-                          {t("eventDetail.to")} {format(new Date(event.endDate), "EEEE, MMMM d, yyyy", { locale: dateLocale })}
+                          {t("eventDetail.to")} {format(parseISO(event.endDate), "EEEE, MMMM d, yyyy", { locale: dateLocale })}
                         </>
                       )}
                     </p>
@@ -306,7 +306,7 @@ export default function EventDetailPage() {
                   <div className="flex items-center gap-2 text-sm text-stable-light">
                     <Calendar size={14} className="text-saddle shrink-0" />
                     <span>
-                      {format(new Date(event.date), "MMM d, yyyy", { locale: dateLocale })}
+                      {format(parseISO(event.date), "MMM d, yyyy", { locale: dateLocale })}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-stable-light">

@@ -11,7 +11,7 @@ import {
   initializeEvents,
 } from "@/store/events";
 import { useLanguage, useDateLocale } from "@/i18n/LanguageContext";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import {
   Ticket,
@@ -186,7 +186,7 @@ export default function MyEventsPage() {
                           <div className="flex items-center gap-1.5">
                             <Calendar size={13} className="text-saddle" />
                             <span>
-                              {format(new Date(reg.event.date), "MMM d, yyyy", { locale: dateLocale })}
+                              {format(parseISO(reg.event.date), "MMM d, yyyy", { locale: dateLocale })}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">

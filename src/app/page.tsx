@@ -8,6 +8,7 @@ import EventCard from "@/components/EventCard";
 import { Event, categoryIcons, EventCategory } from "@/types/event";
 import { getEvents, getFeaturedEvents, initializeEvents } from "@/store/events";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { parseISO } from "date-fns";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -43,7 +44,7 @@ export default function Home() {
     setUpcoming(
       getEvents()
         .filter((e) => e.status === "upcoming")
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime())
         .slice(0, 6)
     );
     setLoaded(true);
