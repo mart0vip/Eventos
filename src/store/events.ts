@@ -274,14 +274,45 @@ export function getRegistrations(eventId?: string): Registration[] {
 export function registerForEvent(
   reg: Omit<Registration, "id" | "registeredAt" | "status">
 ): Registration {
+  const events = getEvents();
+  const event = events.find((e) => e.id === reg.eventId);
+  const wouldExceedCapacity =
+    !event || event.registered + reg.tickets > event.capacity;
+
   const newReg: Registration = {
     ...reg,
     id: uuidv4(),
-    status: "confirmed",
+    status: wouldExceedCapacity ? "waitlisted" : "confirmed",
     registeredAt: new Date().toISOString(),
   };
   const registrations = getRegistrations();
   registrations.push(newReg);
+  saveToStorage(REGISTRATIONS_KEY, registrations);
+
+  if (!wouldExceedCapacity && event) {
+    const eventIndex = events.findIndex((e) => e.id === reg.eventId);
+    events[eventIndex].registered += reg.tickets;
+    saveToStorage(EVENTS_KEY, events);
+  }
+
+  return newReg;
+}
+
+export function getWaitlist(eventId: string): Registration[] {
+  return getRegistrations(eventId)
+    .filter((r) => r.status === "waitlisted")
+    .sort(
+      (a, b) =>
+        new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime()
+    );
+}
+
+export function promoteFromWaitlist(registrationId: string): boolean {
+  const registrations = getRegistrations();
+  const reg = registrations.find((r) => r.id === registrationId);
+  if (!reg || reg.status !== "waitlisted") return false;
+
+  reg.status = "confirmed";
   saveToStorage(REGISTRATIONS_KEY, registrations);
 
   const events = getEvents();
@@ -291,7 +322,7 @@ export function registerForEvent(
     saveToStorage(EVENTS_KEY, events);
   }
 
-  return newReg;
+  return true;
 }
 
 export function cancelRegistration(id: string): boolean {
@@ -299,17 +330,25 @@ export function cancelRegistration(id: string): boolean {
   const reg = registrations.find((r) => r.id === id);
   if (!reg) return false;
 
+  const wasConfirmed = reg.status === "confirmed";
   reg.status = "cancelled";
   saveToStorage(REGISTRATIONS_KEY, registrations);
 
   const events = getEvents();
   const eventIndex = events.findIndex((e) => e.id === reg.eventId);
-  if (eventIndex !== -1) {
+  if (eventIndex !== -1 && wasConfirmed) {
     events[eventIndex].registered = Math.max(
       0,
       events[eventIndex].registered - reg.tickets
     );
     saveToStorage(EVENTS_KEY, events);
+
+    if (events[eventIndex].autoPromoteWaitlist) {
+      const nextInLine = getWaitlist(reg.eventId)[0];
+      if (nextInLine) {
+        promoteFromWaitlist(nextInLine.id);
+      }
+    }
   }
 
   return true;

@@ -6,7 +6,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RegistrationModal from "@/components/RegistrationModal";
-import { Event, categoryIcons } from "@/types/event";
+import { Event, Registration, categoryIcons } from "@/types/event";
 import { getEvent, getEvents, initializeEvents } from "@/store/events";
 import { useLanguage, useDateLocale } from "@/i18n/LanguageContext";
 import EventCard from "@/components/EventCard";
@@ -14,6 +14,7 @@ import { format, parseISO } from "date-fns";
 import {
   Calendar,
   Clock,
+  Clock3,
   MapPin,
   Users,
   DollarSign,
@@ -33,7 +34,7 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [related, setRelated] = useState<Event[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [registered, setRegistered] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState<Registration["status"] | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -59,9 +60,9 @@ export default function EventDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleRegistrationSuccess = () => {
+  const handleRegistrationSuccess = (status: Registration["status"]) => {
     setShowModal(false);
-    setRegistered(true);
+    setRegistrationStatus(status);
     const updated = getEvent(params.id as string);
     if (updated) setEvent(updated);
   };
@@ -278,7 +279,7 @@ export default function EventDetailPage() {
                   </p>
                 </div>
 
-                {registered ? (
+                {registrationStatus === "confirmed" ? (
                   <div className="bg-forest/10 rounded-xl p-4 text-center">
                     <CheckCircle
                       size={32}
@@ -291,14 +292,25 @@ export default function EventDetailPage() {
                       {t("eventDetail.registeredDesc")}
                     </p>
                   </div>
+                ) : registrationStatus === "waitlisted" ? (
+                  <div className="bg-gold/10 rounded-xl p-4 text-center">
+                    <Clock3 size={32} className="text-gold mx-auto mb-2" />
+                    <p className="font-heading font-bold text-saddle-dark mb-1">
+                      {t("eventDetail.waitlistedTitle")}
+                    </p>
+                    <p className="text-sm text-saddle-dark/70">
+                      {t("eventDetail.waitlistedDesc")}
+                    </p>
+                  </div>
                 ) : (
                   <button
                     onClick={() => setShowModal(true)}
-                    disabled={spotsLeft === 0}
-                    className="btn-green w-full justify-center py-3.5 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full justify-center py-3.5 text-lg ${
+                      spotsLeft === 0 ? "btn-primary" : "btn-green"
+                    }`}
                   >
                     <Ticket size={20} />
-                    {spotsLeft === 0 ? t("eventDetail.soldOut") : t("eventDetail.registerNow")}
+                    {spotsLeft === 0 ? t("eventDetail.joinWaitlist") : t("eventDetail.registerNow")}
                   </button>
                 )}
 

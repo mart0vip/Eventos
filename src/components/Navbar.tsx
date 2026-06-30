@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, Calendar, Plus, Home, User } from "lucide-react";
+import { Menu, X, Calendar, Plus, Home, User, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSelector from "@/components/LanguageSelector";
 
@@ -44,6 +44,13 @@ export default function Navbar() {
             >
               <User size={16} />
               {t("nav.myEvents")}
+            </Link>
+            <Link
+              href="/club"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-dust hover:text-white hover:bg-stable-light transition-colors"
+            >
+              <ClipboardList size={16} />
+              {t("nav.clubPanel")}
             </Link>
             <Link href="/events/create" className="btn-primary ml-2 text-sm py-2">
               <Plus size={16} />
@@ -92,6 +99,14 @@ export default function Navbar() {
             >
               <User size={18} />
               {t("nav.myEvents")}
+            </Link>
+            <Link
+              href="/club"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-dust hover:text-white hover:bg-stable transition-colors"
+            >
+              <ClipboardList size={18} />
+              {t("nav.clubPanel")}
             </Link>
             <Link
               href="/events/create"

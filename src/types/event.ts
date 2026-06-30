@@ -19,6 +19,7 @@ export interface Event {
   status: "upcoming" | "ongoing" | "past" | "cancelled";
   isFeatured: boolean;
   createdAt: string;
+  autoPromoteWaitlist?: boolean;
 }
 
 export interface Registration {
@@ -29,8 +30,11 @@ export interface Registration {
   phone: string;
   tickets: number;
   notes: string;
+  horseName: string;
+  insuranceExpiry: string;
+  healthBookletExpiry: string;
   registeredAt: string;
-  status: "confirmed" | "pending" | "cancelled";
+  status: "confirmed" | "pending" | "cancelled" | "waitlisted";
 }
 
 export type EventCategory =

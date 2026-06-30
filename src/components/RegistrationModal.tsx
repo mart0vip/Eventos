@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { X, Ticket, Minus, Plus } from "lucide-react";
-import { Event } from "@/types/event";
+import { X, Ticket, Minus, Plus, Clock3 } from "lucide-react";
+import { Event, Registration } from "@/types/event";
 import { registerForEvent } from "@/store/events";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface RegistrationModalProps {
   event: Event;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (status: Registration["status"]) => void;
 }
 
 export default function RegistrationModal({
@@ -23,10 +23,14 @@ export default function RegistrationModal({
   const [phone, setPhone] = useState("");
   const [tickets, setTickets] = useState(1);
   const [notes, setNotes] = useState("");
+  const [horseName, setHorseName] = useState("");
+  const [insuranceExpiry, setInsuranceExpiry] = useState("");
+  const [healthBookletExpiry, setHealthBookletExpiry] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const spotsLeft = event.capacity - event.registered;
-  const maxTickets = Math.min(spotsLeft, 10);
+  const isFull = spotsLeft <= 0;
+  const maxTickets = isFull ? 10 : Math.min(spotsLeft, 10);
   const totalPrice = event.price * tickets;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -34,16 +38,19 @@ export default function RegistrationModal({
     setSubmitting(true);
 
     setTimeout(() => {
-      registerForEvent({
+      const result = registerForEvent({
         eventId: event.id,
         name,
         email,
         phone,
         tickets,
         notes,
+        horseName,
+        insuranceExpiry,
+        healthBookletExpiry,
       });
       setSubmitting(false);
-      onSuccess();
+      onSuccess(result.status);
     }, 800);
   };
 
@@ -69,6 +76,13 @@ export default function RegistrationModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {isFull && (
+            <div className="flex items-start gap-2 bg-gold/10 border border-gold/30 rounded-lg p-3 text-sm text-saddle-dark">
+              <Clock3 size={16} className="shrink-0 mt-0.5" />
+              <span>{t("registration.eventFullNotice")}</span>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-semibold text-stable mb-1.5">
               {t("registration.fullName")}
@@ -110,6 +124,48 @@ export default function RegistrationModal({
             />
           </div>
 
+          <div className="space-y-4 border-t border-dust/30 pt-5">
+            <div>
+              <label className="block text-sm font-semibold text-stable mb-1.5">
+                {t("registration.horseName")}
+              </label>
+              <input
+                type="text"
+                required
+                value={horseName}
+                onChange={(e) => setHorseName(e.target.value)}
+                placeholder={t("registration.horseNamePlaceholder")}
+                className="input-field"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-stable mb-1.5">
+                  {t("registration.insuranceExpiry")}
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={insuranceExpiry}
+                  onChange={(e) => setInsuranceExpiry(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-stable mb-1.5">
+                  {t("registration.healthBookletExpiry")}
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={healthBookletExpiry}
+                  onChange={(e) => setHealthBookletExpiry(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-semibold text-stable mb-1.5">
               {t("registration.tickets")}
@@ -133,7 +189,9 @@ export default function RegistrationModal({
                 <Plus size={16} />
               </button>
               <span className="text-sm text-stable-light">
-                {t("registration.spotsAvailable", { n: spotsLeft })}
+                {isFull
+                  ? t("registration.waitlistSpots")
+                  : t("registration.spotsAvailable", { n: spotsLeft })}
               </span>
             </div>
           </div>
@@ -166,22 +224,27 @@ export default function RegistrationModal({
 
           <button
             type="submit"
-            disabled={submitting || spotsLeft === 0}
-            className="btn-green w-full justify-center py-3.5 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={submitting}
+            className={`w-full justify-center py-3.5 text-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+              isFull ? "btn-primary" : "btn-green"
+            }`}
           >
             {submitting ? (
               <span className="flex items-center gap-2">
                 <span className="animate-spin">🐴</span>
                 {t("registration.processing")}
               </span>
+            ) : isFull ? (
+              <>
+                <Clock3 size={20} />
+                {t("registration.joinWaitlist")}
+              </>
             ) : (
               <>
                 <Ticket size={20} />
-                {spotsLeft === 0
-                  ? t("registration.soldOut")
-                  : totalPrice === 0
-                    ? t("registration.registerFree")
-                    : t("registration.registerPrice", { total: totalPrice })}
+                {totalPrice === 0
+                  ? t("registration.registerFree")
+                  : t("registration.registerPrice", { total: totalPrice })}
               </>
             )}
           </button>
