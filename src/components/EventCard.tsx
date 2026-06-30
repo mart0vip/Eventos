@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Calendar, MapPin, Users, DollarSign, Clock } from "lucide-react";
 import { format } from "date-fns";
-import { Event, categoryLabels, categoryIcons } from "@/types/event";
+import { Event, categoryIcons } from "@/types/event";
+import { useLanguage, useDateLocale } from "@/i18n/LanguageContext";
 
 interface EventCardProps {
   event: Event;
@@ -11,6 +12,8 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event, featured = false }: EventCardProps) {
+  const { t } = useLanguage();
+  const dateLocale = useDateLocale();
   const spotsLeft = event.capacity - event.registered;
   const percentFilled = (event.registered / event.capacity) * 100;
 
@@ -31,22 +34,22 @@ export default function EventCard({ event, featured = false }: EventCardProps) {
           />
           <div className="absolute top-3 left-3">
             <span className="category-badge">
-              {categoryIcons[event.category]} {categoryLabels[event.category]}
+              {categoryIcons[event.category]} {t(`categories.${event.category}`)}
             </span>
           </div>
           {event.isFeatured && (
             <div className="absolute top-3 right-3 bg-gold text-white text-xs font-bold px-2 py-1 rounded-full">
-              FEATURED
+              {t("eventCard.featured")}
             </div>
           )}
           {spotsLeft <= 10 && spotsLeft > 0 && (
             <div className="absolute bottom-3 right-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-              {spotsLeft} spots left!
+              {t("eventCard.spotsLeft", { n: spotsLeft })}
             </div>
           )}
           {spotsLeft === 0 && (
             <div className="absolute bottom-3 right-3 bg-stable text-white text-xs font-bold px-2 py-1 rounded-full">
-              SOLD OUT
+              {t("eventCard.soldOut")}
             </div>
           )}
         </div>
@@ -71,9 +74,9 @@ export default function EventCard({ event, featured = false }: EventCardProps) {
               <div className="flex items-center gap-2">
                 <Calendar size={14} className="text-saddle shrink-0" />
                 <span>
-                  {format(new Date(event.date), "EEE, MMM d, yyyy")}
+                  {format(new Date(event.date), "EEE, MMM d, yyyy", { locale: dateLocale })}
                   {event.endDate &&
-                    ` - ${format(new Date(event.endDate), "MMM d, yyyy")}`}
+                    ` - ${format(new Date(event.endDate), "MMM d, yyyy", { locale: dateLocale })}`}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -95,7 +98,7 @@ export default function EventCard({ event, featured = false }: EventCardProps) {
               <div className="flex items-center gap-1">
                 <DollarSign size={14} className="text-forest" />
                 <span className="font-bold text-forest">
-                  {event.price === 0 ? "FREE" : `$${event.price}`}
+                  {event.price === 0 ? t("eventCard.free") : `$${event.price}`}
                 </span>
               </div>
               <div className="flex items-center gap-1 text-sm text-stable-light">

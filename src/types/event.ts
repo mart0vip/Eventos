@@ -45,19 +45,6 @@ export type EventCategory =
   | "social"
   | "other";
 
-export const categoryLabels: Record<EventCategory, string> = {
-  "show-jumping": "Show Jumping",
-  dressage: "Dressage",
-  "cross-country": "Cross Country",
-  polo: "Polo",
-  rodeo: "Rodeo",
-  "trail-ride": "Trail Ride",
-  clinic: "Clinic & Workshop",
-  auction: "Horse Auction",
-  social: "Social Gathering",
-  other: "Other",
-};
-
 export const categoryIcons: Record<EventCategory, string> = {
   "show-jumping": "🏇",
   dressage: "🎩",

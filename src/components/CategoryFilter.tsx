@@ -1,25 +1,41 @@
 "use client";
 
-import { EventCategory, categoryLabels, categoryIcons } from "@/types/event";
+import { EventCategory, categoryIcons } from "@/types/event";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface CategoryFilterProps {
   selected: string;
   onChange: (category: string) => void;
 }
 
-const categories: { value: string; label: string; icon: string }[] = [
-  { value: "all", label: "All Events", icon: "🐴" },
-  ...Object.entries(categoryLabels).map(([value, label]) => ({
-    value,
-    label,
-    icon: categoryIcons[value as EventCategory],
-  })),
+const categoryValues: EventCategory[] = [
+  "show-jumping",
+  "dressage",
+  "cross-country",
+  "polo",
+  "rodeo",
+  "trail-ride",
+  "clinic",
+  "auction",
+  "social",
+  "other",
 ];
 
 export default function CategoryFilter({
   selected,
   onChange,
 }: CategoryFilterProps) {
+  const { t } = useLanguage();
+
+  const categories = [
+    { value: "all", label: t("categories.all"), icon: "🐴" },
+    ...categoryValues.map((value) => ({
+      value,
+      label: t(`categories.${value}`),
+      icon: categoryIcons[value],
+    })),
+  ];
+
   return (
     <div className="flex flex-wrap gap-2">
       {categories.map((cat) => (

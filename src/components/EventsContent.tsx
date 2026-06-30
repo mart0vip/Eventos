@@ -6,11 +6,13 @@ import EventCard from "@/components/EventCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import { Event } from "@/types/event";
 import { getEvents, initializeEvents, searchEvents } from "@/store/events";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 
 type SortOption = "date-asc" | "date-desc" | "price-asc" | "price-desc" | "popular";
 
 export default function EventsContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [events, setEvents] = useState<Event[]>([]);
   const [query, setQuery] = useState(searchParams.get("q") || "");
@@ -72,15 +74,15 @@ export default function EventsContent() {
     <>
       <div className="bg-saddle text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-heading font-bold mb-2">Browse Events</h1>
-          <p className="text-leather-light">Find the perfect equestrian event for you</p>
+          <h1 className="text-4xl font-heading font-bold mb-2">{t("eventsPage.title")}</h1>
+          <p className="text-leather-light">{t("eventsPage.subtitle")}</p>
 
           <div className="mt-6 flex gap-2">
             <div className="relative flex-1 max-w-xl">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stable-light" />
               <input
                 type="text"
-                placeholder="Search events..."
+                placeholder={t("eventsPage.searchPlaceholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="input-field pl-11"
@@ -91,7 +93,7 @@ export default function EventsContent() {
               className={`btn-secondary border-white/30 text-white hover:bg-white/10 ${showFilters ? "bg-white/10" : ""}`}
             >
               <SlidersHorizontal size={16} />
-              Filters
+              {t("eventsPage.filters")}
             </button>
           </div>
         </div>
@@ -104,23 +106,25 @@ export default function EventsContent() {
               <div>
                 <label className="block text-sm font-semibold text-stable mb-2">
                   <ArrowUpDown size={14} className="inline mr-1" />
-                  Sort By
+                  {t("eventsPage.sortBy")}
                 </label>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortOption)}
                   className="input-field"
                 >
-                  <option value="date-asc">Date (Soonest First)</option>
-                  <option value="date-desc">Date (Latest First)</option>
-                  <option value="price-asc">Price (Low to High)</option>
-                  <option value="price-desc">Price (High to Low)</option>
-                  <option value="popular">Most Popular</option>
+                  <option value="date-asc">{t("eventsPage.sortDateAsc")}</option>
+                  <option value="date-desc">{t("eventsPage.sortDateDesc")}</option>
+                  <option value="price-asc">{t("eventsPage.sortPriceAsc")}</option>
+                  <option value="price-desc">{t("eventsPage.sortPriceDesc")}</option>
+                  <option value="popular">{t("eventsPage.sortPopular")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-stable mb-2">Price</label>
+                <label className="block text-sm font-semibold text-stable mb-2">
+                  {t("eventsPage.price")}
+                </label>
                 <div className="flex gap-2">
                   {(["all", "free", "paid"] as const).map((opt) => (
                     <button
@@ -132,7 +136,11 @@ export default function EventsContent() {
                           : "bg-cream-dark text-stable-light hover:text-saddle"
                       }`}
                     >
-                      {opt === "all" ? "All Prices" : opt === "free" ? "Free" : "Paid"}
+                      {opt === "all"
+                        ? t("eventsPage.priceAll")
+                        : opt === "free"
+                          ? t("eventsPage.priceFree")
+                          : t("eventsPage.pricePaid")}
                     </button>
                   ))}
                 </div>
@@ -147,11 +155,12 @@ export default function EventsContent() {
 
         <div className="flex items-center justify-between mb-6">
           <p className="text-stable-light text-sm">
-            Showing <span className="font-bold text-stable">{filteredEvents.length}</span>{" "}
-            event{filteredEvents.length !== 1 ? "s" : ""}
+            {t("eventsPage.showing")}{" "}
+            <span className="font-bold text-stable">{filteredEvents.length}</span>{" "}
+            {t("eventsPage.events")}
             {query && (
               <span>
-                {" "}for &ldquo;<span className="text-saddle">{query}</span>&rdquo;
+                {" "}{t("eventsPage.for")} &ldquo;<span className="text-saddle">{query}</span>&rdquo;
               </span>
             )}
           </p>
@@ -160,8 +169,10 @@ export default function EventsContent() {
         {filteredEvents.length === 0 ? (
           <div className="text-center py-20">
             <span className="text-6xl block mb-4">🐴</span>
-            <h3 className="font-heading text-xl font-bold text-stable mb-2">No events found</h3>
-            <p className="text-stable-light mb-6">Try adjusting your filters or search terms</p>
+            <h3 className="font-heading text-xl font-bold text-stable mb-2">
+              {t("eventsPage.noEventsFound")}
+            </h3>
+            <p className="text-stable-light mb-6">{t("eventsPage.tryAdjusting")}</p>
             <button
               onClick={() => {
                 setQuery("");
@@ -170,7 +181,7 @@ export default function EventsContent() {
               }}
               className="btn-secondary"
             >
-              Clear Filters
+              {t("eventsPage.clearFilters")}
             </button>
           </div>
         ) : (

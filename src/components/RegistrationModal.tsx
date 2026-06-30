@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Ticket, Minus, Plus } from "lucide-react";
 import { Event } from "@/types/event";
 import { registerForEvent } from "@/store/events";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface RegistrationModalProps {
   event: Event;
@@ -16,6 +17,7 @@ export default function RegistrationModal({
   onClose,
   onSuccess,
 }: RegistrationModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -60,7 +62,7 @@ export default function RegistrationModal({
           <div className="flex items-center gap-2 mb-2">
             <Ticket size={20} />
             <span className="text-leather-light font-medium text-sm">
-              Event Registration
+              {t("registration.title")}
             </span>
           </div>
           <h2 className="font-heading text-xl font-bold">{event.title}</h2>
@@ -69,48 +71,48 @@ export default function RegistrationModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
             <label className="block text-sm font-semibold text-stable mb-1.5">
-              Full Name *
+              {t("registration.fullName")}
             </label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your full name"
+              placeholder={t("registration.fullNamePlaceholder")}
               className="input-field"
             />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-stable mb-1.5">
-              Email *
+              {t("registration.email")}
             </label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder={t("registration.emailPlaceholder")}
               className="input-field"
             />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-stable mb-1.5">
-              Phone
+              {t("registration.phone")}
             </label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 000-0000"
+              placeholder={t("registration.phonePlaceholder")}
               className="input-field"
             />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-stable mb-1.5">
-              Number of Tickets
+              {t("registration.tickets")}
             </label>
             <div className="flex items-center gap-4">
               <button
@@ -131,19 +133,19 @@ export default function RegistrationModal({
                 <Plus size={16} />
               </button>
               <span className="text-sm text-stable-light">
-                ({spotsLeft} spots available)
+                {t("registration.spotsAvailable", { n: spotsLeft })}
               </span>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-stable mb-1.5">
-              Notes (optional)
+              {t("registration.notes")}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any special requirements or dietary needs..."
+              placeholder={t("registration.notesPlaceholder")}
               rows={3}
               className="input-field resize-none"
             />
@@ -152,10 +154,12 @@ export default function RegistrationModal({
           <div className="bg-cream-dark rounded-xl p-4">
             <div className="flex justify-between text-sm mb-1">
               <span className="text-stable-light">
-                {event.price === 0 ? "Free admission" : `$${event.price} x ${tickets} ticket${tickets > 1 ? "s" : ""}`}
+                {event.price === 0
+                  ? t("registration.freeAdmission")
+                  : t("registration.ticketSummary", { price: event.price, n: tickets })}
               </span>
               <span className="font-bold text-stable">
-                {totalPrice === 0 ? "FREE" : `$${totalPrice}`}
+                {totalPrice === 0 ? t("eventCard.free") : `$${totalPrice}`}
               </span>
             </div>
           </div>
@@ -168,16 +172,16 @@ export default function RegistrationModal({
             {submitting ? (
               <span className="flex items-center gap-2">
                 <span className="animate-spin">🐴</span>
-                Processing...
+                {t("registration.processing")}
               </span>
             ) : (
               <>
                 <Ticket size={20} />
                 {spotsLeft === 0
-                  ? "Sold Out"
+                  ? t("registration.soldOut")
                   : totalPrice === 0
-                    ? "Register for Free"
-                    : `Register - $${totalPrice}`}
+                    ? t("registration.registerFree")
+                    : t("registration.registerPrice", { total: totalPrice })}
               </>
             )}
           </button>

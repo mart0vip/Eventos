@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Search, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function HeroSection() {
   const [search, setSearch] = useState("");
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,19 +34,18 @@ export default function HeroSection() {
           <div className="flex items-center gap-2 mb-4">
             <span className="text-4xl">🐴</span>
             <span className="text-leather-light font-heading text-lg tracking-widest uppercase">
-              Equestrian Events
+              {t("hero.badge")}
             </span>
           </div>
 
           <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-6 leading-tight">
-            Discover Your Next{" "}
-            <span className="text-leather-light">Equestrian</span> Adventure
+            {t("hero.titleStart")}{" "}
+            <span className="text-leather-light">{t("hero.titleHighlight")}</span>{" "}
+            {t("hero.titleEnd")}
           </h1>
 
           <p className="text-lg text-dust/90 mb-8 leading-relaxed">
-            From championship show jumping to peaceful trail rides, find and
-            manage equestrian events that match your passion. Create, share, and
-            join a community of riders.
+            {t("hero.subtitle")}
           </p>
 
           <form onSubmit={handleSearch} className="flex gap-2 mb-8">
@@ -55,24 +56,24 @@ export default function HeroSection() {
               />
               <input
                 type="text"
-                placeholder="Search events, locations, or categories..."
+                placeholder={t("hero.searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="input-field pl-11 py-3.5 rounded-lg shadow-lg"
               />
             </div>
             <button type="submit" className="btn-primary shadow-lg px-6">
-              Search
+              {t("hero.search")}
             </button>
           </form>
 
           <div className="flex flex-wrap gap-3">
             <Link href="/events" className="btn-secondary bg-white/90 text-sm">
-              Browse All Events
+              {t("hero.browseAll")}
               <ArrowRight size={16} />
             </Link>
             <Link href="/events/create" className="btn-green text-sm">
-              Create an Event
+              {t("hero.createEvent")}
               <ArrowRight size={16} />
             </Link>
           </div>

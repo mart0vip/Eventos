@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Calendar, Plus, Home, User } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <nav className="bg-stable text-white shadow-lg sticky top-0 z-40">
@@ -26,34 +29,40 @@ export default function Navbar() {
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-dust hover:text-white hover:bg-stable-light transition-colors"
             >
               <Home size={16} />
-              Home
+              {t("nav.home")}
             </Link>
             <Link
               href="/events"
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-dust hover:text-white hover:bg-stable-light transition-colors"
             >
               <Calendar size={16} />
-              Events
+              {t("nav.events")}
             </Link>
             <Link
               href="/my-events"
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-dust hover:text-white hover:bg-stable-light transition-colors"
             >
               <User size={16} />
-              My Events
+              {t("nav.myEvents")}
             </Link>
             <Link href="/events/create" className="btn-primary ml-2 text-sm py-2">
               <Plus size={16} />
-              Create Event
+              {t("nav.createEvent")}
             </Link>
+            <div className="ml-2 pl-2 border-l border-white/10">
+              <LanguageSelector />
+            </div>
           </div>
 
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-stable-light transition-colors"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="md:hidden flex items-center gap-1">
+            <LanguageSelector />
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 rounded-lg hover:bg-stable-light transition-colors"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -66,7 +75,7 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-dust hover:text-white hover:bg-stable transition-colors"
             >
               <Home size={18} />
-              Home
+              {t("nav.home")}
             </Link>
             <Link
               href="/events"
@@ -74,7 +83,7 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-dust hover:text-white hover:bg-stable transition-colors"
             >
               <Calendar size={18} />
-              Browse Events
+              {t("nav.browseEvents")}
             </Link>
             <Link
               href="/my-events"
@@ -82,7 +91,7 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-dust hover:text-white hover:bg-stable transition-colors"
             >
               <User size={18} />
-              My Events
+              {t("nav.myEvents")}
             </Link>
             <Link
               href="/events/create"
@@ -90,7 +99,7 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-saddle text-white hover:bg-saddle-light transition-colors"
             >
               <Plus size={18} />
-              Create Event
+              {t("nav.createEvent")}
             </Link>
           </div>
         </div>

@@ -4,25 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { EventCategory, categoryLabels } from "@/types/event";
+import { EventCategory } from "@/types/event";
 import { createEvent } from "@/store/events";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   ArrowLeft,
   Image,
   Calendar,
-  Clock,
   MapPin,
   DollarSign,
-  Users,
   Tag,
   Type,
-  FileText,
-  User,
   CheckCircle,
   Plus,
   X,
 } from "lucide-react";
 import Link from "next/link";
+
+const categoryValues: EventCategory[] = [
+  "show-jumping",
+  "dressage",
+  "cross-country",
+  "polo",
+  "rodeo",
+  "trail-ride",
+  "clinic",
+  "auction",
+  "social",
+  "other",
+];
 
 const defaultImages: Record<EventCategory, string> = {
   "show-jumping":
@@ -47,6 +57,7 @@ const defaultImages: Record<EventCategory, string> = {
 };
 
 export default function CreateEventPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -122,11 +133,9 @@ export default function CreateEventPage() {
           <div className="text-center">
             <CheckCircle size={64} className="text-forest mx-auto mb-4" />
             <h2 className="font-heading text-2xl font-bold text-stable mb-2">
-              Event Created!
+              {t("createEvent.createdTitle")}
             </h2>
-            <p className="text-stable-light">
-              Redirecting to your event page...
-            </p>
+            <p className="text-stable-light">{t("createEvent.createdDesc")}</p>
           </div>
         </div>
         <Footer />
@@ -145,14 +154,10 @@ export default function CreateEventPage() {
             className="flex items-center gap-1 text-leather-light hover:text-white text-sm mb-3 transition-colors"
           >
             <ArrowLeft size={16} />
-            Back to Events
+            {t("createEvent.backToEvents")}
           </Link>
-          <h1 className="text-3xl font-heading font-bold">
-            Create a New Event
-          </h1>
-          <p className="text-leather-light mt-1">
-            Fill in the details below to publish your equestrian event
-          </p>
+          <h1 className="text-3xl font-heading font-bold">{t("createEvent.title")}</h1>
+          <p className="text-leather-light mt-1">{t("createEvent.subtitle")}</p>
         </div>
       </div>
 
@@ -162,33 +167,33 @@ export default function CreateEventPage() {
           <div className="bg-white rounded-xl p-6 border border-dust/50">
             <h2 className="font-heading text-lg font-bold text-stable mb-4 flex items-center gap-2">
               <Type size={20} className="text-saddle" />
-              Basic Information
+              {t("createEvent.basicInfo")}
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Event Title *
+                  {t("createEvent.eventTitle")}
                 </label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Annual Show Jumping Championship"
+                  placeholder={t("createEvent.eventTitlePlaceholder")}
                   className="input-field"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Description *
+                  {t("createEvent.description")}
                 </label>
                 <textarea
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe your event in detail..."
+                  placeholder={t("createEvent.descriptionPlaceholder")}
                   rows={5}
                   className="input-field resize-none"
                 />
@@ -197,7 +202,7 @@ export default function CreateEventPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-stable mb-1.5">
-                    Category *
+                    {t("createEvent.category")}
                   </label>
                   <select
                     value={category}
@@ -206,9 +211,9 @@ export default function CreateEventPage() {
                     }
                     className="input-field"
                   >
-                    {Object.entries(categoryLabels).map(([value, label]) => (
+                    {categoryValues.map((value) => (
                       <option key={value} value={value}>
-                        {label}
+                        {t(`categories.${value}`)}
                       </option>
                     ))}
                   </select>
@@ -216,14 +221,14 @@ export default function CreateEventPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-stable mb-1.5">
-                    Organizer Name *
+                    {t("createEvent.organizerName")}
                   </label>
                   <input
                     type="text"
                     required
                     value={organizer}
                     onChange={(e) => setOrganizer(e.target.value)}
-                    placeholder="Your organization name"
+                    placeholder={t("createEvent.organizerPlaceholder")}
                     className="input-field"
                   />
                 </div>
@@ -235,13 +240,13 @@ export default function CreateEventPage() {
           <div className="bg-white rounded-xl p-6 border border-dust/50">
             <h2 className="font-heading text-lg font-bold text-stable mb-4 flex items-center gap-2">
               <Calendar size={20} className="text-saddle" />
-              Date & Time
+              {t("createEvent.dateTime")}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Start Date *
+                  {t("createEvent.startDate")}
                 </label>
                 <input
                   type="date"
@@ -253,7 +258,7 @@ export default function CreateEventPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  End Date (optional)
+                  {t("createEvent.endDate")}
                 </label>
                 <input
                   type="date"
@@ -264,7 +269,7 @@ export default function CreateEventPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Start Time *
+                  {t("createEvent.startTime")}
                 </label>
                 <input
                   type="time"
@@ -276,7 +281,7 @@ export default function CreateEventPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  End Time (optional)
+                  {t("createEvent.endTime")}
                 </label>
                 <input
                   type="time"
@@ -292,33 +297,33 @@ export default function CreateEventPage() {
           <div className="bg-white rounded-xl p-6 border border-dust/50">
             <h2 className="font-heading text-lg font-bold text-stable mb-4 flex items-center gap-2">
               <MapPin size={20} className="text-saddle" />
-              Location
+              {t("createEvent.location")}
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Venue Name *
+                  {t("createEvent.venueName")}
                 </label>
                 <input
                   type="text"
                   required
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g., Royal Equestrian Center"
+                  placeholder={t("createEvent.venuePlaceholder")}
                   className="input-field"
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Address *
+                  {t("createEvent.address")}
                 </label>
                 <input
                   type="text"
                   required
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Full address"
+                  placeholder={t("createEvent.addressPlaceholder")}
                   className="input-field"
                 />
               </div>
@@ -329,13 +334,13 @@ export default function CreateEventPage() {
           <div className="bg-white rounded-xl p-6 border border-dust/50">
             <h2 className="font-heading text-lg font-bold text-stable mb-4 flex items-center gap-2">
               <DollarSign size={20} className="text-saddle" />
-              Tickets & Pricing
+              {t("createEvent.ticketsPricing")}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Price (USD)
+                  {t("createEvent.price")}
                 </label>
                 <input
                   type="number"
@@ -343,13 +348,13 @@ export default function CreateEventPage() {
                   step="0.01"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0 for free events"
+                  placeholder={t("createEvent.pricePlaceholder")}
                   className="input-field"
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Maximum Capacity *
+                  {t("createEvent.capacity")}
                 </label>
                 <input
                   type="number"
@@ -357,7 +362,7 @@ export default function CreateEventPage() {
                   min="1"
                   value={capacity}
                   onChange={(e) => setCapacity(e.target.value)}
-                  placeholder="e.g., 100"
+                  placeholder={t("createEvent.capacityPlaceholder")}
                   className="input-field"
                 />
               </div>
@@ -368,19 +373,19 @@ export default function CreateEventPage() {
           <div className="bg-white rounded-xl p-6 border border-dust/50">
             <h2 className="font-heading text-lg font-bold text-stable mb-4 flex items-center gap-2">
               <Image size={20} className="text-saddle" />
-              Image & Tags
+              {t("createEvent.imageTags")}
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Image URL (optional)
+                  {t("createEvent.imageUrl")}
                 </label>
                 <input
                   type="url"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://... (leave blank for default image)"
+                  placeholder={t("createEvent.imageUrlPlaceholder")}
                   className="input-field"
                 />
                 {(imageUrl || defaultImages[category]) && (
@@ -399,7 +404,7 @@ export default function CreateEventPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-stable mb-1.5">
-                  Tags
+                  {t("createEvent.tags")}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -412,7 +417,7 @@ export default function CreateEventPage() {
                         addTag();
                       }
                     }}
-                    placeholder="Add tags and press Enter"
+                    placeholder={t("createEvent.tagsPlaceholder")}
                     className="input-field"
                   />
                   <button
@@ -453,7 +458,7 @@ export default function CreateEventPage() {
                   className="w-4 h-4 accent-saddle"
                 />
                 <span className="text-sm font-medium text-stable">
-                  Mark as featured event
+                  {t("createEvent.markFeatured")}
                 </span>
               </label>
             </div>
@@ -469,17 +474,17 @@ export default function CreateEventPage() {
               {submitting ? (
                 <span className="flex items-center gap-2">
                   <span className="animate-spin">🐴</span>
-                  Creating Event...
+                  {t("createEvent.creating")}
                 </span>
               ) : (
                 <>
                   <CheckCircle size={20} />
-                  Publish Event
+                  {t("createEvent.publish")}
                 </>
               )}
             </button>
             <Link href="/events" className="btn-secondary text-lg px-8 py-3.5">
-              Cancel
+              {t("createEvent.cancel")}
             </Link>
           </div>
         </form>

@@ -10,6 +10,7 @@ import {
   cancelRegistration,
   initializeEvents,
 } from "@/store/events";
+import { useLanguage, useDateLocale } from "@/i18n/LanguageContext";
 import { format } from "date-fns";
 import Link from "next/link";
 import {
@@ -28,6 +29,8 @@ interface RegistrationWithEvent extends Registration {
 }
 
 export default function MyEventsPage() {
+  const { t } = useLanguage();
+  const dateLocale = useDateLocale();
   const [registrations, setRegistrations] = useState<RegistrationWithEvent[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [cancelId, setCancelId] = useState<string | null>(null);
@@ -74,10 +77,8 @@ export default function MyEventsPage() {
 
       <div className="bg-saddle text-white py-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-heading font-bold">My Events</h1>
-          <p className="text-leather-light mt-1">
-            View and manage your event registrations
-          </p>
+          <h1 className="text-3xl font-heading font-bold">{t("myEvents.title")}</h1>
+          <p className="text-leather-light mt-1">{t("myEvents.subtitle")}</p>
         </div>
       </div>
 
@@ -86,19 +87,19 @@ export default function MyEventsPage() {
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 border border-dust/50 text-center">
             <p className="text-2xl font-bold text-forest">{confirmed.length}</p>
-            <p className="text-sm text-stable-light">Active</p>
+            <p className="text-sm text-stable-light">{t("myEvents.active")}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-dust/50 text-center">
             <p className="text-2xl font-bold text-stable">
               {registrations.length}
             </p>
-            <p className="text-sm text-stable-light">Total</p>
+            <p className="text-sm text-stable-light">{t("myEvents.total")}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-dust/50 text-center">
             <p className="text-2xl font-bold text-red-500">
               {cancelled.length}
             </p>
-            <p className="text-sm text-stable-light">Cancelled</p>
+            <p className="text-sm text-stable-light">{t("myEvents.cancelled")}</p>
           </div>
         </div>
 
@@ -106,13 +107,13 @@ export default function MyEventsPage() {
           <div className="text-center py-20">
             <span className="text-6xl block mb-4">🐴</span>
             <h3 className="font-heading text-xl font-bold text-stable mb-2">
-              No Registrations Yet
+              {t("myEvents.noRegistrationsTitle")}
             </h3>
             <p className="text-stable-light mb-6">
-              Browse our events and register for something exciting!
+              {t("myEvents.noRegistrationsDesc")}
             </p>
             <Link href="/events" className="btn-primary">
-              Browse Events
+              {t("myEvents.browseEvents")}
             </Link>
           </div>
         ) : (
@@ -159,11 +160,13 @@ export default function MyEventsPage() {
                                 : "text-red-500"
                             }`}
                           >
-                            {reg.status}
+                            {reg.status === "confirmed"
+                              ? t("myEvents.statusConfirmed")
+                              : t("myEvents.statusCancelled")}
                           </span>
                         </div>
                         <h3 className="font-heading font-bold text-stable text-lg">
-                          {reg.event?.title || "Unknown Event"}
+                          {reg.event?.title || t("myEvents.unknownEvent")}
                         </h3>
                       </div>
 
@@ -183,7 +186,7 @@ export default function MyEventsPage() {
                           <div className="flex items-center gap-1.5">
                             <Calendar size={13} className="text-saddle" />
                             <span>
-                              {format(new Date(reg.event.date), "MMM d, yyyy")}
+                              {format(new Date(reg.event.date), "MMM d, yyyy", { locale: dateLocale })}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">
@@ -197,7 +200,7 @@ export default function MyEventsPage() {
                       <div className="flex items-center gap-1.5">
                         <Ticket size={13} className="text-saddle" />
                         <span>
-                          {reg.tickets} ticket{reg.tickets > 1 ? "s" : ""}
+                          {reg.tickets} {t("myEvents.tickets")}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -205,7 +208,8 @@ export default function MyEventsPage() {
                         <span>
                           {format(
                             new Date(reg.registeredAt),
-                            "MMM d, h:mm a"
+                            "MMM d, h:mm a",
+                            { locale: dateLocale }
                           )}
                         </span>
                       </div>
@@ -217,19 +221,19 @@ export default function MyEventsPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-red-600 flex items-center gap-1">
                               <AlertCircle size={14} />
-                              Cancel this registration?
+                              {t("myEvents.cancelConfirm")}
                             </span>
                             <button
                               onClick={() => handleCancel(reg.id)}
                               className="text-sm px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
                             >
-                              Yes, Cancel
+                              {t("myEvents.yesCancel")}
                             </button>
                             <button
                               onClick={() => setCancelId(null)}
                               className="text-sm px-3 py-1 rounded-lg border border-dust hover:bg-cream-dark transition-colors"
                             >
-                              No, Keep
+                              {t("myEvents.noKeep")}
                             </button>
                           </div>
                         ) : (
@@ -238,7 +242,7 @@ export default function MyEventsPage() {
                             className="text-sm text-red-500 hover:text-red-700 transition-colors flex items-center gap-1"
                           >
                             <XCircle size={14} />
-                            Cancel Registration
+                            {t("myEvents.cancelRegistration")}
                           </button>
                         )}
                       </div>

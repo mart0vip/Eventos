@@ -5,20 +5,34 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import EventCard from "@/components/EventCard";
-import { Event, categoryLabels, categoryIcons, EventCategory } from "@/types/event";
+import { Event, categoryIcons, EventCategory } from "@/types/event";
 import { getEvents, getFeaturedEvents, initializeEvents } from "@/store/events";
+import { useLanguage } from "@/i18n/LanguageContext";
 import Link from "next/link";
 import {
   ArrowRight,
   Calendar,
   Users,
   MapPin,
-  Star,
   Shield,
   Zap,
 } from "lucide-react";
 
+const categoryValues: EventCategory[] = [
+  "show-jumping",
+  "dressage",
+  "cross-country",
+  "polo",
+  "rodeo",
+  "trail-ride",
+  "clinic",
+  "auction",
+  "social",
+  "other",
+];
+
 export default function Home() {
+  const { t } = useLanguage();
   const [featured, setFeatured] = useState<Event[]>([]);
   const [upcoming, setUpcoming] = useState<Event[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -41,12 +55,19 @@ export default function Home() {
         <div className="text-center">
           <span className="text-6xl block mb-4 animate-bounce">🐴</span>
           <p className="text-stable-light font-heading text-lg">
-            Saddling up...
+            {t("common.loading")}
           </p>
         </div>
       </div>
     );
   }
+
+  const features = [
+    { icon: <Calendar size={28} />, title: t("home.feature1Title"), desc: t("home.feature1Desc") },
+    { icon: <Users size={28} />, title: t("home.feature2Title"), desc: t("home.feature2Desc") },
+    { icon: <MapPin size={28} />, title: t("home.feature3Title"), desc: t("home.feature3Desc") },
+    { icon: <Shield size={28} />, title: t("home.feature4Title"), desc: t("home.feature4Desc") },
+  ];
 
   return (
     <>
@@ -59,17 +80,17 @@ export default function Home() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="horseshoe-divider text-sm font-heading mb-2 w-48">
-              FEATURED
+              {t("home.featuredLabel")}
             </div>
             <h2 className="text-3xl font-heading font-bold text-stable">
-              Featured Events
+              {t("home.featuredTitle")}
             </h2>
           </div>
           <Link
             href="/events"
             className="hidden sm:flex items-center gap-1 text-saddle font-semibold hover:text-saddle-light transition-colors"
           >
-            View All
+            {t("home.viewAll")}
             <ArrowRight size={16} />
           </Link>
         </div>
@@ -86,14 +107,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="horseshoe-divider text-sm font-heading mb-2 max-w-xs mx-auto">
-              UPCOMING
+              {t("home.upcomingLabel")}
             </div>
             <h2 className="text-3xl font-heading font-bold text-stable mb-3">
-              Upcoming Events
+              {t("home.upcomingTitle")}
             </h2>
             <p className="text-stable-light max-w-lg mx-auto">
-              Don&apos;t miss out on these exciting equestrian events happening
-              soon
+              {t("home.upcomingSubtitle")}
             </p>
           </div>
 
@@ -105,7 +125,7 @@ export default function Home() {
 
           <div className="text-center mt-10">
             <Link href="/events" className="btn-primary">
-              Browse All Events
+              {t("home.browseAll")}
               <ArrowRight size={16} />
             </Link>
           </div>
@@ -116,25 +136,23 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <div className="horseshoe-divider text-sm font-heading mb-2 max-w-xs mx-auto">
-            CATEGORIES
+            {t("home.categoriesLabel")}
           </div>
           <h2 className="text-3xl font-heading font-bold text-stable mb-3">
-            Explore by Category
+            {t("home.categoriesTitle")}
           </h2>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {Object.entries(categoryLabels).map(([key, label]) => (
+          {categoryValues.map((key) => (
             <Link
               key={key}
               href={`/events?category=${key}`}
               className="card-hover bg-white rounded-xl p-6 text-center border border-dust/50"
             >
-              <span className="text-4xl block mb-3">
-                {categoryIcons[key as EventCategory]}
-              </span>
+              <span className="text-4xl block mb-3">{categoryIcons[key]}</span>
               <span className="font-heading font-semibold text-stable text-sm">
-                {label}
+                {t(`categories.${key}`)}
               </span>
             </Link>
           ))}
@@ -146,37 +164,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-heading font-bold text-leather-light mb-3">
-              Why Choose Equestrian Events?
+              {t("home.whyTitle")}
             </h2>
-            <p className="text-dust/80 max-w-lg mx-auto">
-              Everything you need to discover, create, and manage equestrian
-              events
-            </p>
+            <p className="text-dust/80 max-w-lg mx-auto">{t("home.whySubtitle")}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: <Calendar size={28} />,
-                title: "Easy Event Creation",
-                desc: "Create and publish your event in minutes with our intuitive event builder",
-              },
-              {
-                icon: <Users size={28} />,
-                title: "Guest Management",
-                desc: "Track registrations, manage capacity, and communicate with attendees",
-              },
-              {
-                icon: <MapPin size={28} />,
-                title: "Local Discovery",
-                desc: "Find events near you with powerful search and category filters",
-              },
-              {
-                icon: <Shield size={28} />,
-                title: "Secure Registration",
-                desc: "Safe and reliable registration system with instant confirmation",
-              },
-            ].map((feature, i) => (
+            {features.map((feature, i) => (
               <div key={i} className="text-center">
                 <div className="w-14 h-14 rounded-xl bg-saddle flex items-center justify-center mx-auto mb-4 text-leather-light">
                   {feature.icon}
@@ -198,15 +192,14 @@ export default function Home() {
         <div className="bg-gradient-to-r from-saddle to-saddle-dark rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
           <div className="absolute top-4 right-8 text-8xl opacity-10">🐴</div>
           <h2 className="text-3xl font-heading font-bold mb-4">
-            Ready to Host Your Own Event?
+            {t("home.ctaTitle")}
           </h2>
           <p className="text-leather-light mb-8 max-w-lg mx-auto">
-            Create your equestrian event in minutes and reach riders from across
-            the region
+            {t("home.ctaSubtitle")}
           </p>
           <Link href="/events/create" className="btn-green text-lg px-8 py-4">
             <Zap size={20} />
-            Create Your Event
+            {t("home.ctaButton")}
           </Link>
         </div>
       </section>

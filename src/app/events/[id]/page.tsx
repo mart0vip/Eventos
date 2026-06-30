@@ -6,8 +6,9 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RegistrationModal from "@/components/RegistrationModal";
-import { Event, categoryLabels, categoryIcons } from "@/types/event";
+import { Event, categoryIcons } from "@/types/event";
 import { getEvent, getEvents, initializeEvents } from "@/store/events";
+import { useLanguage, useDateLocale } from "@/i18n/LanguageContext";
 import EventCard from "@/components/EventCard";
 import { format } from "date-fns";
 import {
@@ -25,6 +26,8 @@ import {
 } from "lucide-react";
 
 export default function EventDetailPage() {
+  const { t } = useLanguage();
+  const dateLocale = useDateLocale();
   const params = useParams();
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
@@ -78,14 +81,12 @@ export default function EventDetailPage() {
         <div className="min-h-[60vh] flex flex-col items-center justify-center">
           <span className="text-6xl mb-4">🐴</span>
           <h2 className="font-heading text-2xl font-bold text-stable mb-2">
-            Event Not Found
+            {t("eventDetail.notFoundTitle")}
           </h2>
-          <p className="text-stable-light mb-6">
-            This event may have been removed or the link is incorrect.
-          </p>
+          <p className="text-stable-light mb-6">{t("eventDetail.notFoundDesc")}</p>
           <Link href="/events" className="btn-primary">
             <ArrowLeft size={16} />
-            Back to Events
+            {t("eventDetail.backToEvents")}
           </Link>
         </div>
         <Footer />
@@ -114,10 +115,10 @@ export default function EventDetailPage() {
             className="flex items-center gap-1 text-white/80 hover:text-white text-sm mb-3 transition-colors"
           >
             <ArrowLeft size={16} />
-            Back
+            {t("eventDetail.back")}
           </button>
           <span className="category-badge bg-white/90 text-saddle-dark mb-2 inline-block">
-            {categoryIcons[event.category]} {categoryLabels[event.category]}
+            {categoryIcons[event.category]} {t(`categories.${event.category}`)}
           </span>
         </div>
       </div>
@@ -138,7 +139,7 @@ export default function EventDetailPage() {
                   <Share2 size={18} />
                   {copied && (
                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs bg-stable text-white px-2 py-1 rounded whitespace-nowrap">
-                      Copied!
+                      {t("eventDetail.copied")}
                     </span>
                   )}
                 </button>
@@ -146,7 +147,7 @@ export default function EventDetailPage() {
 
               {event.isFeatured && (
                 <span className="inline-flex items-center gap-1 text-gold text-sm font-semibold mb-4">
-                  <span>FEATURED EVENT</span>
+                  <span>{t("eventDetail.featured")}</span>
                 </span>
               )}
 
@@ -154,13 +155,13 @@ export default function EventDetailPage() {
                 <div className="flex items-start gap-3 p-3 bg-cream-dark rounded-lg">
                   <Calendar size={20} className="text-saddle mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-stable text-sm">Date</p>
+                    <p className="font-semibold text-stable text-sm">{t("eventDetail.date")}</p>
                     <p className="text-stable-light text-sm">
-                      {format(new Date(event.date), "EEEE, MMMM d, yyyy")}
+                      {format(new Date(event.date), "EEEE, MMMM d, yyyy", { locale: dateLocale })}
                       {event.endDate && (
                         <>
                           <br />
-                          to {format(new Date(event.endDate), "EEEE, MMMM d, yyyy")}
+                          {t("eventDetail.to")} {format(new Date(event.endDate), "EEEE, MMMM d, yyyy", { locale: dateLocale })}
                         </>
                       )}
                     </p>
@@ -170,7 +171,7 @@ export default function EventDetailPage() {
                 <div className="flex items-start gap-3 p-3 bg-cream-dark rounded-lg">
                   <Clock size={20} className="text-saddle mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-stable text-sm">Time</p>
+                    <p className="font-semibold text-stable text-sm">{t("eventDetail.time")}</p>
                     <p className="text-stable-light text-sm">
                       {event.time}
                       {event.endTime && ` - ${event.endTime}`}
@@ -181,7 +182,7 @@ export default function EventDetailPage() {
                 <div className="flex items-start gap-3 p-3 bg-cream-dark rounded-lg">
                   <MapPin size={20} className="text-saddle mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-stable text-sm">Location</p>
+                    <p className="font-semibold text-stable text-sm">{t("eventDetail.location")}</p>
                     <p className="text-stable-light text-sm">{event.location}</p>
                     <p className="text-stable-light/70 text-xs">{event.address}</p>
                   </div>
@@ -191,7 +192,7 @@ export default function EventDetailPage() {
                   <User size={20} className="text-saddle mt-0.5 shrink-0" />
                   <div>
                     <p className="font-semibold text-stable text-sm">
-                      Organizer
+                      {t("eventDetail.organizer")}
                     </p>
                     <p className="text-stable-light text-sm">
                       {event.organizer}
@@ -201,7 +202,7 @@ export default function EventDetailPage() {
               </div>
 
               <div className="horseshoe-divider text-sm font-heading mb-4">
-                ABOUT THIS EVENT
+                {t("eventDetail.about")}
               </div>
 
               <div className="prose prose-sm max-w-none text-stable-light leading-relaxed whitespace-pre-line">
@@ -227,7 +228,7 @@ export default function EventDetailPage() {
             {related.length > 0 && (
               <div>
                 <h3 className="font-heading text-xl font-bold text-stable mb-4">
-                  Similar Events
+                  {t("eventDetail.similarEvents")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {related.map((e) => (
@@ -245,10 +246,10 @@ export default function EventDetailPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <DollarSign size={20} />
                   <span className="text-3xl font-bold font-heading">
-                    {event.price === 0 ? "FREE" : `$${event.price}`}
+                    {event.price === 0 ? t("eventCard.free") : `$${event.price}`}
                   </span>
                 </div>
-                <p className="text-leather-light text-sm">per person</p>
+                <p className="text-leather-light text-sm">{t("eventDetail.perPerson")}</p>
               </div>
 
               <div className="p-6">
@@ -256,7 +257,7 @@ export default function EventDetailPage() {
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span className="flex items-center gap-1 text-stable-light">
                       <Users size={14} />
-                      Capacity
+                      {t("eventDetail.capacity")}
                     </span>
                     <span className="font-semibold text-stable">
                       {event.registered} / {event.capacity}
@@ -272,8 +273,8 @@ export default function EventDetailPage() {
                   </div>
                   <p className="text-xs text-stable-light mt-1">
                     {spotsLeft > 0
-                      ? `${spotsLeft} spots remaining`
-                      : "This event is sold out"}
+                      ? t("eventDetail.spotsRemaining", { n: spotsLeft })
+                      : t("eventDetail.soldOutDesc")}
                   </p>
                 </div>
 
@@ -284,10 +285,10 @@ export default function EventDetailPage() {
                       className="text-forest mx-auto mb-2"
                     />
                     <p className="font-heading font-bold text-forest mb-1">
-                      You&apos;re Registered!
+                      {t("eventDetail.registeredTitle")}
                     </p>
                     <p className="text-sm text-forest/70">
-                      Check your email for confirmation
+                      {t("eventDetail.registeredDesc")}
                     </p>
                   </div>
                 ) : (
@@ -297,7 +298,7 @@ export default function EventDetailPage() {
                     className="btn-green w-full justify-center py-3.5 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Ticket size={20} />
-                    {spotsLeft === 0 ? "Sold Out" : "Register Now"}
+                    {spotsLeft === 0 ? t("eventDetail.soldOut") : t("eventDetail.registerNow")}
                   </button>
                 )}
 
@@ -305,7 +306,7 @@ export default function EventDetailPage() {
                   <div className="flex items-center gap-2 text-sm text-stable-light">
                     <Calendar size={14} className="text-saddle shrink-0" />
                     <span>
-                      {format(new Date(event.date), "MMM d, yyyy")}
+                      {format(new Date(event.date), "MMM d, yyyy", { locale: dateLocale })}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-stable-light">

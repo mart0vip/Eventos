@@ -1,6 +1,19 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/i18n/LanguageContext";
+
+const footerCategories = [
+  "show-jumping",
+  "dressage",
+  "cross-country",
+  "trail-ride",
+  "polo",
+] as const;
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-stable text-dust mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -13,30 +26,28 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-sm text-dust/70 leading-relaxed">
-              Your premier platform for discovering and managing equestrian
-              events. From show jumping to trail rides, find your next adventure
-              in the saddle.
+              {t("footer.tagline")}
             </p>
           </div>
 
           <div>
             <h4 className="font-heading font-bold text-leather-light mb-4">
-              Quick Links
+              {t("footer.quickLinks")}
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/events" className="hover:text-leather-light transition-colors">
-                  Browse Events
+                  {t("footer.browseEvents")}
                 </Link>
               </li>
               <li>
                 <Link href="/events/create" className="hover:text-leather-light transition-colors">
-                  Create Event
+                  {t("footer.createEvent")}
                 </Link>
               </li>
               <li>
                 <Link href="/my-events" className="hover:text-leather-light transition-colors">
-                  My Registrations
+                  {t("footer.myRegistrations")}
                 </Link>
               </li>
             </ul>
@@ -44,20 +55,18 @@ export default function Footer() {
 
           <div>
             <h4 className="font-heading font-bold text-leather-light mb-4">
-              Event Types
+              {t("footer.eventTypes")}
             </h4>
             <ul className="space-y-2 text-sm">
-              <li>Show Jumping</li>
-              <li>Dressage</li>
-              <li>Cross Country</li>
-              <li>Trail Rides</li>
-              <li>Polo</li>
+              {footerCategories.map((cat) => (
+                <li key={cat}>{t(`categories.${cat}`)}</li>
+              ))}
             </ul>
           </div>
 
           <div>
             <h4 className="font-heading font-bold text-leather-light mb-4">
-              Contact
+              {t("footer.contact")}
             </h4>
             <ul className="space-y-2 text-sm">
               <li>info@equestrianevents.com</li>
@@ -68,7 +77,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-dust/50">
-          <p>&copy; 2026 Equestrian Events. All rights reserved.</p>
+          <p>&copy; 2026 Equestrian Events. {t("footer.rights")}</p>
         </div>
       </div>
     </footer>
