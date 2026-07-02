@@ -28,6 +28,8 @@ export default function RegistrationModal({
   const [healthBookletExpiry, setHealthBookletExpiry] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const today = new Date().toISOString().split("T")[0];
+
   const spotsLeft = event.capacity - event.registered;
   const isFull = spotsLeft <= 0;
   const maxTickets = isFull ? 10 : Math.min(spotsLeft, 10);
@@ -146,6 +148,7 @@ export default function RegistrationModal({
                 <input
                   type="date"
                   required
+                  min={today}
                   value={insuranceExpiry}
                   onChange={(e) => setInsuranceExpiry(e.target.value)}
                   className="input-field"
@@ -158,6 +161,7 @@ export default function RegistrationModal({
                 <input
                   type="date"
                   required
+                  min={today}
                   value={healthBookletExpiry}
                   onChange={(e) => setHealthBookletExpiry(e.target.value)}
                   className="input-field"

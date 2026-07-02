@@ -49,7 +49,7 @@ export default function MyEventsPage() {
     }));
     enriched.sort(
       (a, b) =>
-        new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime()
+        parseISO(b.registeredAt).getTime() - parseISO(a.registeredAt).getTime()
     );
     setRegistrations(enriched);
   };
@@ -207,7 +207,7 @@ export default function MyEventsPage() {
                         <Clock size={13} className="text-saddle" />
                         <span>
                           {format(
-                            new Date(reg.registeredAt),
+                            parseISO(reg.registeredAt),
                             "MMM d, h:mm a",
                             { locale: dateLocale }
                           )}

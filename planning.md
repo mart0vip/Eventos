@@ -1,6 +1,6 @@
 # planning.md — Gap Analysis & Roadmap
 
-Comparison of the Technical Brief ("Brief Técnico, Junio 2025") against the current Equestrian Events codebase, and a proposed plan to close the gap.
+Comparison of the Technical Brief ("Brief Técnico, Junio 2025" — source document: [`Brief_Tecnico_Sistema_Equitacion.docx`](./Brief_Tecnico_Sistema_Equitacion.docx)) against the current Equestrian Events codebase, and a proposed plan to close the gap.
 
 ---
 

@@ -113,7 +113,7 @@ Waitlist promotion is **manual by default** (club panel "Promover" button) with 
 
 ### Club management panel (`/club`)
 
-No auth gate — open to anyone, consistent with the rest of the app. It is the only screen that:
+**No auth gate — open to anyone.** Unlike the rest of the app (where "open to anyone" just means no login), this screen surfaces personal data and destructive actions, so this is a real exposure, not just a UX gap — see [Known limitations](#known-limitations). It is the only screen that:
 - Aggregates registrations **across all events**, grouped by `EventCategory` (counts of confirmed vs. waitlisted), answering "how many people are registered per category club-wide."
 - Lets staff select a single event and see/manage its confirmed registrants and waitlist as tables, with expired `insuranceExpiry`/`healthBookletExpiry` visually flagged (red text + "(vencido)"/"(expired)") by comparing against `new Date()` at render time — flagging is purely a UI concern, the raw dates are unaffected.
 - Exposes `cancelRegistration` and `promoteFromWaitlist` as row-level actions, and `autoPromoteWaitlist` as a per-event checkbox (persisted via `updateEvent`).
@@ -143,7 +143,7 @@ Column headers in the exported CSV are the **translated** column labels (`t('clu
 
 These are intentional scope boundaries, not oversights:
 
-- **No authentication.** `/club` and `/events/create` are reachable by anyone. Adding real auth (and gating the club panel behind it) would be the natural next step before this app could be used by an actual club.
+- **No authentication.** `/club` and `/events/create` are reachable by anyone. **Do not deploy this app publicly with real registrant data before adding auth** — `/club` exposes riders' PII (name, email, phone, horse name, insurance/health-booklet dates) to any visitor and lets them cancel registrations, promote waitlists, and toggle auto-promotion with no access control. Gating `/club` behind real auth is a prerequisite, not a nice-to-have, before an actual club uses this with real people's data.
 - **No backend / no multi-device sync.** Everything lives in one browser's `localStorage`. Registering on a phone and checking `/my-events` on a laptop will show nothing — there's no shared source of truth.
 - **No payment processing.** Prices are displayed and summed but `registerForEvent` never charges anything.
 - **No image upload.** Event images are URLs (defaults provided per category, or a user-supplied URL) — there's no file upload/storage.

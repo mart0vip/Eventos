@@ -4,6 +4,8 @@ A horse-riding event management platform — inspired by Wix Events, with an equ
 
 Everything runs client-side with no backend — data is stored in your browser's `localStorage`. See [`architecture.md`](./architecture.md) for the full technical write-up (data model, store design, capacity/waitlist logic, i18n, known limitations).
 
+**New here? Start with:** this README for what the app does today, [`architecture.md`](./architecture.md) for how it's built, and [`planning.md`](./planning.md) for the gap analysis and roadmap toward the full club system described in the source brief ([`Brief_Tecnico_Sistema_Equitacion.docx`](./Brief_Tecnico_Sistema_Equitacion.docx)).
+
 ## Features
 
 ### Browse & discover events
@@ -46,6 +48,8 @@ npm run lint    # eslint
 ```
 
 > **Note:** All data (events and registrations) lives in your browser's `localStorage`, scoped to `http://localhost:3000`. Clearing site data / using a different browser or profile starts you over with the demo events. There is no backend, no shared database, and no login — see [`architecture.md`](./architecture.md#known-limitations) for what that means in practice.
+>
+> **⚠️ Security:** `/club` has no access control and displays registrants' personal data (email, phone, horse name, insurance/health-booklet dates) to any visitor, plus unprotected cancel/promote actions. Do not deploy this publicly with real people's data until `/club` is gated behind real authentication.
 
 ## How to use it
 

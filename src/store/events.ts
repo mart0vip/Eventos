@@ -1,5 +1,6 @@
 import { Event, Registration } from "@/types/event";
 import { v4 as uuidv4 } from "uuid";
+import { parseISO } from "date-fns";
 
 const EVENTS_KEY = "equestrian_events";
 const REGISTRATIONS_KEY = "equestrian_registrations";
@@ -303,7 +304,7 @@ export function getWaitlist(eventId: string): Registration[] {
     .filter((r) => r.status === "waitlisted")
     .sort(
       (a, b) =>
-        new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime()
+        parseISO(a.registeredAt).getTime() - parseISO(b.registeredAt).getTime()
     );
 }
 

@@ -262,6 +262,7 @@ export default function CreateEventPage() {
                 </label>
                 <input
                   type="date"
+                  min={date || undefined}
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="input-field"

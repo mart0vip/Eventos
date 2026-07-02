@@ -83,7 +83,7 @@ export default function ClubPanelPage() {
     .filter((r) => r.eventId === selectedEventId && r.status === "confirmed")
     .sort(
       (a, b) =>
-        new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime()
+        parseISO(a.registeredAt).getTime() - parseISO(b.registeredAt).getTime()
     );
   const waitlistRegistrants = selectedEventId ? getWaitlist(selectedEventId) : [];
 
