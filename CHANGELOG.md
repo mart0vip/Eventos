@@ -13,6 +13,13 @@ Todos los cambios notables de este proyecto se documentan en este archivo, sigui
 - Cron de liberación de holds vencidos (`/api/admin/release-expired-holds`), configurado para Vercel Cron en producción y para `npm run dev:cron` en local.
 - Scaffolding (rutas `501`) para Fases 2-4: portal de socios, exportación XLSX al sistema legado del club, dashboard de tesorería.
 - `docker-compose.yml` con Postgres local para desarrollo, y `docs/fase1-setup.md` con la guía de setup completa.
+- Identidad de marca real del Club Hípico Argentino (`docs/MarcaCHA.md`): paleta de colores, tipografía (Montserrat + Open Sans vía `next/font/google`), logo y favicon reales.
+- Barra superior (`TopBar`) con datos de contacto y redes sociales (Facebook, Instagram) del club.
+
+### Changed
+
+- Rediseño completo de la identidad visual de la app (antes placeholder "Equestrian Events"): paleta de colores azul/neutros, tipografía real, botones cuadrados en mayúscula, header reestructurado (topbar + nav blanco), footer con datos reales de contacto. Aplicado a toda la app, tanto la demo original en inglés como el sistema de concursos en español.
+- Reemplazo del nombre de marca placeholder por "Club Hípico Argentino" en toda la app, el email de confirmación y la documentación (README, planning, architecture).
 
 ### Fixed
 
