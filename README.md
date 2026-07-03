@@ -2,9 +2,9 @@
 
 A horse-riding event management platform — inspired by Wix Events, with an equestrian look and feel and a few features built specifically for hípica clubs: per-category registrant views, waitlist management, and horse/insurance/health-booklet fields on every registration.
 
-Everything runs client-side with no backend — data is stored in your browser's `localStorage`. See [`architecture.md`](./architecture.md) for the full technical write-up (data model, store design, capacity/waitlist logic, i18n, known limitations).
+Everything runs client-side with no backend — data is stored in your browser's `localStorage`. See [`docs/architecture.md`](./docs/architecture.md) for the full technical write-up (data model, store design, capacity/waitlist logic, i18n, known limitations).
 
-**New here? Start with:** this README for what the app does today, [`architecture.md`](./architecture.md) for how it's built, and [`planning.md`](./planning.md) for the gap analysis and roadmap toward the full club system described in the source brief ([`Brief_Tecnico_Sistema_Equitacion.docx`](./Brief_Tecnico_Sistema_Equitacion.docx)).
+**New here? Start with:** this README for what the app does today, [`docs/architecture.md`](./docs/architecture.md) for how it's built, and [`planning.md`](./planning.md) for the gap analysis and roadmap toward the full club system described in the source brief ([`Brief_Tecnico_Sistema_Equitacion.docx`](./docs/Brief_Tecnico_Sistema_Equitacion.docx)).
 
 ## Features
 
@@ -47,7 +47,7 @@ npm run start   # run the production build locally
 npm run lint    # eslint
 ```
 
-> **Note:** All data (events and registrations) lives in your browser's `localStorage`, scoped to `http://localhost:3000`. Clearing site data / using a different browser or profile starts you over with the demo events. There is no backend, no shared database, and no login — see [`architecture.md`](./architecture.md#known-limitations) for what that means in practice.
+> **Note:** All data (events and registrations) lives in your browser's `localStorage`, scoped to `http://localhost:3000`. Clearing site data / using a different browser or profile starts you over with the demo events. There is no backend, no shared database, and no login — see [`docs/architecture.md`](./docs/architecture.md#known-limitations) for what that means in practice.
 >
 > **⚠️ Security:** `/club` has no access control and displays registrants' personal data (email, phone, horse name, insurance/health-booklet dates) to any visitor, plus unprotected cancel/promote actions. Do not deploy this publicly with real people's data until `/club` is gated behind real authentication.
 
@@ -68,4 +68,32 @@ npm run lint    # eslint
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · date-fns · lucide-react · uuid
 
-No external i18n or state-management library — both are small custom implementations (`src/i18n/`, `src/store/events.ts`) sized to fit this app. Details and rationale in [`architecture.md`](./architecture.md).
+No external i18n or state-management library — both are small custom implementations (`src/i18n/`, `src/store/events.ts`) sized to fit this app. Details and rationale in [`docs/architecture.md`](./docs/architecture.md).
+
+## Fase 1 — Sistema de Concursos (`/concursos`, `/admin`)
+
+Además de la app de eventos original (arriba), este repo incluye el **Fase 1** del sistema de concursos de equitación construido a partir de `docs/claude_code_prompt_equestrian_v2.md`: inscripción a pruebas con pago online (Mercado Pago), sorteo, cálculo de deuda por binomio y un panel de administración. Es un sistema **paralelo** al de arriba — no reemplaza ni migra `src/store/events.ts` — con su propio backend en Postgres.
+
+**Setup local:**
+
+```bash
+docker compose up -d        # levanta Postgres local
+npm install
+npm run db:migrate          # crea el schema
+npm run db:seed             # (opcional) datos de prueba
+npm run dev
+```
+
+En otra terminal, si querés probar el vencimiento de holds sin esperar el cron de producción:
+
+```bash
+npm run dev:cron
+```
+
+Copiá `.env.example` a `.env.local` y completá las variables (ver [`docs/fase1-setup.md`](./docs/fase1-setup.md) para el detalle completo, incluyendo dónde conseguir las credenciales reales de Mercado Pago y Resend).
+
+**Estado:** Fase 1 completa (inscripciones, pagos, sorteo, deuda, panel admin, export CSV). Fases 2-4 (portal de socios, export XLSX legacy, dashboard) están scaffoldeadas como rutas `501 Not Implemented`, sin lógica.
+
+**Tech stack adicional:** PostgreSQL (`pg`, sin ORM) · Mercado Pago Checkout Pro · Resend · zod · ExcelJS (stub Fase 3).
+
+> **⚠️ Seguridad:** el panel `/admin` está protegido por un secreto compartido simple (`ADMIN_SECRET`), no por un sistema de usuarios real — ver `docs/fase1-setup.md` antes de exponerlo públicamente.

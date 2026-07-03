@@ -17,5 +17,5 @@ TO DO
 
 ## Documentación detallada
 
-- Arquitectura, diagrama → `docs/ARCHITECTURE.md`
-- Gitflow, PR checklist, deploy → `docs/WORKFLOW.md`
+- Arquitectura, diagrama → `docs/architecture.md`
+- Gitflow, PR checklist, deploy → `docs/workflow.md`

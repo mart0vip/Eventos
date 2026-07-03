@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, Calendar, Plus, Home, User, ClipboardList } from "lucide-react";
+import { Menu, X, Calendar, Plus, Home, User, ClipboardList, Trophy, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSelector from "@/components/LanguageSelector";
 
@@ -51,6 +51,20 @@ export default function Navbar() {
             >
               <ClipboardList size={16} />
               {t("nav.clubPanel")}
+            </Link>
+            <Link
+              href="/concursos"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-dust hover:text-white hover:bg-stable-light transition-colors"
+            >
+              <Trophy size={16} />
+              {t("nav.concursos")}
+            </Link>
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-dust hover:text-white hover:bg-stable-light transition-colors"
+            >
+              <ShieldCheck size={16} />
+              {t("nav.adminPanel")}
             </Link>
             <Link href="/events/create" className="btn-primary ml-2 text-sm py-2">
               <Plus size={16} />
@@ -107,6 +121,22 @@ export default function Navbar() {
             >
               <ClipboardList size={18} />
               {t("nav.clubPanel")}
+            </Link>
+            <Link
+              href="/concursos"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-dust hover:text-white hover:bg-stable transition-colors"
+            >
+              <Trophy size={18} />
+              {t("nav.concursos")}
+            </Link>
+            <Link
+              href="/admin"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-dust hover:text-white hover:bg-stable transition-colors"
+            >
+              <ShieldCheck size={18} />
+              {t("nav.adminPanel")}
             </Link>
             <Link
               href="/events/create"

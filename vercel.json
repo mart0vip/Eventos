@@ -1,0 +1,3 @@
+{
+  "crons": [{ "path": "/api/admin/release-expired-holds", "schedule": "*/5 * * * *" }]
+}
