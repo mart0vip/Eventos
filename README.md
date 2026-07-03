@@ -1,4 +1,4 @@
-# Equestrian Events
+# Club Hípico Argentino
 
 A horse-riding event management platform — inspired by Wix Events, with an equestrian look and feel and a few features built specifically for hípica clubs: per-category registrant views, waitlist management, and horse/insurance/health-booklet fields on every registration.
 

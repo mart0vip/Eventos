@@ -27,7 +27,7 @@ const translations = {
       rights: "Todos los derechos reservados.",
     },
     hero: {
-      badge: "Eventos Ecuestres",
+      badge: "Club Hípico Argentino",
       titleStart: "Descubre Tu Próxima",
       titleHighlight: "Aventura",
       titleEnd: "Ecuestre",
@@ -95,7 +95,7 @@ const translations = {
       browseAll: "Explorar Todos los Eventos",
       categoriesLabel: "CATEGORÍAS",
       categoriesTitle: "Explora por Categoría",
-      whyTitle: "¿Por Qué Elegir Equestrian Events?",
+      whyTitle: "¿Por Qué Elegir Club Hípico Argentino?",
       whySubtitle:
         "Todo lo que necesitas para descubrir, crear y gestionar eventos ecuestres",
       feature1Title: "Creación Fácil de Eventos",
@@ -397,7 +397,7 @@ const translations = {
       rights: "All rights reserved.",
     },
     hero: {
-      badge: "Equestrian Events",
+      badge: "Club Hípico Argentino",
       titleStart: "Discover Your Next",
       titleHighlight: "Equestrian",
       titleEnd: "Adventure",
@@ -465,7 +465,7 @@ const translations = {
       browseAll: "Browse All Events",
       categoriesLabel: "CATEGORIES",
       categoriesTitle: "Explore by Category",
-      whyTitle: "Why Choose Equestrian Events?",
+      whyTitle: "Why Choose Club Hípico Argentino?",
       whySubtitle:
         "Everything you need to discover, create, and manage equestrian events",
       feature1Title: "Easy Event Creation",

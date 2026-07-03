@@ -1,6 +1,6 @@
 # Architecture
 
-This document explains how Equestrian Events is built and why, so future changes stay consistent with the existing design.
+This document explains how the Club Hípico Argentino app is built and why, so future changes stay consistent with the existing design.
 
 ## Stack
 
