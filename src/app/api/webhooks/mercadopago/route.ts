@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPayment, verifyWebhookSignature } from "@/lib/mercadopago";
+import { getPayment, parseExternalReference, verifyWebhookSignature } from "@/lib/mercadopago";
 import {
   cancelRegistrationAndReleaseSlot,
   confirmRegistration,
@@ -8,7 +8,10 @@ import {
 import { getEventCheckoutContext } from "@/lib/db/queries/events";
 import { getBinomioById } from "@/lib/db/queries/binomios";
 import { getNextWaitlisted, markNotified } from "@/lib/db/queries/waitlist";
-import { sendConfirmationEmail } from "@/lib/email";
+import { getDebtWithMember, markDebtPaid } from "@/lib/db/queries/members";
+import { insertPaymentEvent } from "@/lib/db/queries/paymentEvents";
+import { sendConfirmationEmail, sendMemberDebtReceiptEmail } from "@/lib/email";
+import { debtConceptLabel } from "@/lib/debtConcepts";
 
 /**
  * POST /api/webhooks/mercadopago
@@ -51,20 +54,30 @@ export async function POST(request: NextRequest) {
 
   try {
     const payment = await getPayment(dataId);
-    const registrationId = payment.external_reference;
+    const externalReference = payment.external_reference;
 
-    if (!registrationId) {
+    if (!externalReference) {
       console.error("Mercado Pago payment has no external_reference", { dataId });
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    if (payment.status === "approved") {
-      await confirmRegistration(registrationId, String(payment.id));
-      await sendConfirmationReceipt(registrationId, payment);
+    const parsed = parseExternalReference(externalReference);
+
+    if (parsed.kind === "member_debt") {
+      await processMemberDebtPayment(parsed.debtId, payment);
+    } else if (payment.status === "approved") {
+      await confirmRegistration(parsed.registrationId, String(payment.id));
+      await insertPaymentEvent({
+        source: "registration",
+        sourceId: parsed.registrationId,
+        amountArs: Math.round((payment.transaction_amount ?? 0) * 100),
+        mpPaymentId: String(payment.id),
+      });
+      await sendConfirmationReceipt(parsed.registrationId, payment);
     } else if (payment.status === "rejected" || payment.status === "cancelled") {
-      const released = await cancelRegistrationAndReleaseSlot(registrationId);
+      const released = await cancelRegistrationAndReleaseSlot(parsed.registrationId);
       if (released) {
-        await notifyNextWaitlisted(registrationId);
+        await notifyNextWaitlisted(parsed.registrationId);
       }
     }
   } catch (err) {
@@ -72,6 +85,44 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ received: true }, { status: 200 });
+}
+
+/**
+ * Fase 2 branch of the webhook: marks the socio's debt paid, records the
+ * payment in the Fase 4 ledger, and emails the receipt. A rejected/cancelled
+ * payment needs no action — unlike registrations there's no held slot to
+ * release; the debt simply stays pending and the socio can retry. The
+ * `markDebtPaid` guard makes webhook retries idempotent (email + ledger only
+ * run on the first approved notification).
+ */
+async function processMemberDebtPayment(
+  debtId: string,
+  payment: { id?: number | string; status?: string; transaction_amount?: number }
+): Promise<void> {
+  if (payment.status !== "approved") return;
+
+  const firstConfirmation = await markDebtPaid(debtId, String(payment.id));
+  if (!firstConfirmation) return;
+
+  await insertPaymentEvent({
+    source: "member_debt",
+    sourceId: debtId,
+    amountArs: Math.round((payment.transaction_amount ?? 0) * 100),
+    mpPaymentId: String(payment.id),
+  });
+
+  const found = await getDebtWithMember(debtId);
+  if (!found) return;
+
+  await sendMemberDebtReceiptEmail({
+    to: found.member.email,
+    memberName: found.member.name,
+    memberNumber: found.member.memberNumber,
+    conceptLabel: debtConceptLabel(found.debt.concept),
+    dueDate: found.debt.dueDate,
+    amountPaidArs: Math.round((payment.transaction_amount ?? 0) * 100),
+    mpPaymentId: String(payment.id ?? ""),
+  });
 }
 
 async function sendConfirmationReceipt(
