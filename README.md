@@ -96,4 +96,6 @@ Copiá `.env.example` a `.env.local` y completá las variables (ver [`docs/fase1
 
 **Tech stack adicional:** PostgreSQL (`pg`, sin ORM) · Mercado Pago Checkout Pro · Resend · zod · ExcelJS (stub Fase 3).
 
+**Deploy a producción:** ver [`DEPLOY.md`](./DEPLOY.md) (Vercel).
+
 > **⚠️ Seguridad:** el panel `/admin` está protegido por un secreto compartido simple (`ADMIN_SECRET`), no por un sistema de usuarios real — ver `docs/fase1-setup.md` antes de exponerlo públicamente.

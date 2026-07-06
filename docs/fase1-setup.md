@@ -80,10 +80,8 @@ Antes de ir a producción con esto: conseguir credenciales reales de MP (modo te
 - **CSV (Fase 1, ya funciona):** pestaña "Exportar" del panel admin, botón "Descargar CSV" — reutiliza la utilidad existente `src/lib/csv.ts` (mismo formato UTF-8 con BOM que ya usa `/club`).
 - **XLSX en el formato del sistema legado del club (Fase 3):** todavía no implementado — `src/lib/export.ts` tiene solo el esqueleto de la función (`generateDailyExport`), documentado con las columnas esperadas.
 
-## 8. Primer deploy (Railway o Render)
+## 8. Primer deploy
 
-1. Crear un servicio Postgres (Railway o Render) y copiar su `DATABASE_URL` a las variables de entorno del deploy.
-2. Configurar el resto de las variables de la sección 3 (con credenciales reales de MP/Resend).
-3. Correr `npm run db:migrate` contra la base de producción (una vez, antes del primer deploy o como parte del build step).
-4. Si el deploy es en Vercel: `vercel.json` ya tiene el cron configurado para `/api/admin/release-expired-holds` cada 5 minutos — solo falta setear `CRON_SECRET` como variable de entorno del proyecto.
-5. Configurar el webhook de Mercado Pago apuntando a la URL pública real (sección 4).
+Guía completa y paso a paso para el deploy en Vercel (el proveedor recomendado, ya que `vercel.json` trae el cron configurado): ver [`DEPLOY.md`](../DEPLOY.md).
+
+Si preferís otro proveedor (Railway, Render, etc.), los pasos generales son los mismos: base Postgres externa → variables de entorno de la sección 3 con credenciales reales → `npm run db:migrate` contra esa base → webhook de Mercado Pago apuntando a la URL pública real (sección 4) → resolver el cron de liberación de holds vos mismo (por ejemplo con un cron del sistema o el scheduler propio del proveedor), ya que `vercel.json` solo aplica a Vercel.
