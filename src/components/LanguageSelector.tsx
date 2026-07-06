@@ -31,7 +31,7 @@ export default function LanguageSelector() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-dust hover:text-white hover:bg-stable-light transition-colors"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-stable-light hover:text-saddle hover:bg-cream-dark transition-colors"
         aria-label="Select language"
       >
         <span className="text-base">{current.flag}</span>

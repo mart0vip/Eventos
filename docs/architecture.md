@@ -1,6 +1,6 @@
 # Architecture
 
-This document explains how Equestrian Events is built and why, so future changes stay consistent with the existing design.
+This document explains how the Club Hípico Argentino app is built and why, so future changes stay consistent with the existing design.
 
 ## Stack
 
@@ -147,3 +147,14 @@ These are intentional scope boundaries, not oversights:
 - **No backend / no multi-device sync.** Everything lives in one browser's `localStorage`. Registering on a phone and checking `/my-events` on a laptop will show nothing — there's no shared source of truth.
 - **No payment processing.** Prices are displayed and summed but `registerForEvent` never charges anything.
 - **No image upload.** Event images are URLs (defaults provided per category, or a user-supplied URL) — there's no file upload/storage.
+
+## Fase 1 — Sistema de Concursos (capa nueva, coexiste con lo de arriba)
+
+Todo lo descripto hasta acá (rutas `/`, `/events*`, `/my-events`, `/club`, el store en `src/store/events.ts`) sigue existiendo tal cual y **no se tocó**. A partir de la especificación en `docs/claude_code_prompt_equestrian_v2.md` se agregó, en paralelo, un segundo sistema con su propio backend:
+
+- **Datos:** PostgreSQL real (`src/lib/db/`, driver `pg` sin ORM) en vez de `localStorage`. Ver `src/lib/db/migrations/001_initial.sql` para el schema completo (competitions → competition_days → events/pruebas → binomios → registrations → waitlist).
+- **Tipos:** `src/types/competition.ts` — a propósito **no** reutiliza los nombres `Event`/`Registration` de `src/types/event.ts` (son conceptos distintos: el nuevo `Registration` representa una inscripción a una prueba con pago vía Mercado Pago, no tiene relación con el `Registration` viejo).
+- **Rutas nuevas:** `/concursos`, `/concursos/[id]`, `/inscripcion/gracias|error|pendiente` (público) y `/admin` (protegido por `ADMIN_SECRET`, ver `src/lib/auth/admin-secret.ts`), más toda la API en `src/app/api/`.
+- **Por qué hay dos "Registration" en el código:** si en algún momento un archivo necesita importar ambos tipos, hay que aliasear uno (`import { Registration as LegacyRegistration } from "@/types/event"`) — documentado también en el propio `src/types/competition.ts`.
+
+Detalle completo de setup, variables de entorno y qué se pudo verificar sin credenciales reales de Mercado Pago/Resend: [`docs/fase1-setup.md`](./fase1-setup.md).
