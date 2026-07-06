@@ -10,11 +10,20 @@ import InscriptosTab from "@/components/admin/InscriptosTab";
 import SorteoTab from "@/components/admin/SorteoTab";
 import DeudaTab from "@/components/admin/DeudaTab";
 import ExportarTab from "@/components/admin/ExportarTab";
+import SociosTab from "@/components/admin/SociosTab";
+import DashboardTab from "@/components/admin/DashboardTab";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { adminFetch, getStoredAdminSecret, storeAdminSecret } from "@/lib/adminSecret";
 import { Competition } from "@/types/competition";
 
-type Tab = "anteprograma" | "inscriptos" | "sorteo" | "deuda" | "exportar";
+type Tab =
+  | "anteprograma"
+  | "inscriptos"
+  | "sorteo"
+  | "deuda"
+  | "socios"
+  | "exportar"
+  | "dashboard";
 
 function AdminPageContent() {
   const { t } = useLanguage();
@@ -109,7 +118,9 @@ function AdminPageContent() {
     { id: "inscriptos", labelKey: "admin.tabInscriptos" },
     { id: "sorteo", labelKey: "admin.tabSorteo" },
     { id: "deuda", labelKey: "admin.tabDeuda" },
+    { id: "socios", labelKey: "admin.tabSocios" },
     { id: "exportar", labelKey: "admin.tabExportar" },
+    { id: "dashboard", labelKey: "admin.tabDashboard" },
   ];
 
   const sharedProps = {
@@ -139,7 +150,9 @@ function AdminPageContent() {
       {tab === "inscriptos" && <InscriptosTab {...sharedProps} />}
       {tab === "sorteo" && <SorteoTab {...sharedProps} />}
       {tab === "deuda" && <DeudaTab {...sharedProps} />}
+      {tab === "socios" && <SociosTab secret={secret} />}
       {tab === "exportar" && <ExportarTab {...sharedProps} />}
+      {tab === "dashboard" && <DashboardTab secret={secret} />}
     </div>
   );
 }
