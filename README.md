@@ -70,9 +70,9 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · date-fns
 
 No external i18n or state-management library — both are small custom implementations (`src/i18n/`, `src/store/events.ts`) sized to fit this app. Details and rationale in [`docs/architecture.md`](./docs/architecture.md).
 
-## Fase 1 — Sistema de Concursos (`/concursos`, `/admin`)
+## Sistema de Concursos y Socios (`/concursos`, `/socios`, `/admin`)
 
-Además de la app de eventos original (arriba), este repo incluye el **Fase 1** del sistema de concursos de equitación construido a partir de `docs/claude_code_prompt_equestrian_v2.md`: inscripción a pruebas con pago online (Mercado Pago), sorteo, cálculo de deuda por binomio y un panel de administración. Es un sistema **paralelo** al de arriba — no reemplaza ni migra `src/store/events.ts` — con su propio backend en Postgres.
+Además de la app de eventos original (arriba), este repo incluye el sistema de concursos de equitación construido a partir de `docs/claude_code_prompt_equestrian_v2.md`: inscripción a pruebas con pago online (Mercado Pago), sorteo, cálculo de deuda por binomio, portal de socios con cobro de cuotas/pensiones/roperos, exportación diaria al sistema legado del club, dashboard de tesorería y un panel de administración. Es un sistema **paralelo** al de arriba — no reemplaza ni migra `src/store/events.ts` — con su propio backend en Postgres.
 
 **Setup local:**
 
@@ -92,9 +92,9 @@ npm run dev:cron
 
 Copiá `.env.example` a `.env.local` y completá las variables (ver [`docs/fase1-setup.md`](./docs/fase1-setup.md) para el detalle completo, incluyendo dónde conseguir las credenciales reales de Mercado Pago y Resend).
 
-**Estado:** Fase 1 completa (inscripciones, pagos, sorteo, deuda, panel admin, export CSV). Fases 2-4 (portal de socios, export XLSX legacy, dashboard) están scaffoldeadas como rutas `501 Not Implemented`, sin lógica.
+**Estado:** Fases 1-4 completas — Fase 1 (inscripciones, pagos, sorteo, deuda, panel admin, export CSV — ver [`docs/fase1-setup.md`](./docs/fase1-setup.md)), Fase 2 (portal de socios `/socios/[id]` con pago online), Fase 3 (export XLSX diario al sistema legado, pendiente validar el formato exacto de columnas con el club) y Fase 4 (dashboard de tesorería). Detalle de las Fases 2-4: [`docs/fase2-4-setup.md`](./docs/fase2-4-setup.md). Las notificaciones por WhatsApp (ítem opcional de Fase 4) quedaron fuera de alcance.
 
-**Tech stack adicional:** PostgreSQL (`pg`, sin ORM) · Mercado Pago Checkout Pro · Resend · zod · ExcelJS (stub Fase 3).
+**Tech stack adicional:** PostgreSQL (`pg`, sin ORM) · Mercado Pago Checkout Pro · Resend · zod · ExcelJS.
 
 **Deploy a producción:** ver [`DEPLOY.md`](./DEPLOY.md) (Vercel).
 
