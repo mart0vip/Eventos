@@ -158,3 +158,13 @@ Todo lo descripto hasta acá (rutas `/`, `/events*`, `/my-events`, `/club`, el s
 - **Por qué hay dos "Registration" en el código:** si en algún momento un archivo necesita importar ambos tipos, hay que aliasear uno (`import { Registration as LegacyRegistration } from "@/types/event"`) — documentado también en el propio `src/types/competition.ts`.
 
 Detalle completo de setup, variables de entorno y qué se pudo verificar sin credenciales reales de Mercado Pago/Resend: [`docs/fase1-setup.md`](./fase1-setup.md).
+
+## Fases 2-4 — Portal de socios, exportación legacy y dashboard
+
+Sobre la misma capa de Fase 1 (mismo Postgres, mismo `ADMIN_SECRET`, mismo webhook de Mercado Pago) se implementaron las tres fases restantes del plan:
+
+- **Fase 2 — Portal de socios:** entidades `members`/`member_debts` (scaffoldeadas en la migración 001, activadas en `002_fase2_socios.sql`). El socio accede por link permanente `/socios/[id]` (UUID no enumerable, misma postura de acceso que la consulta de deuda de Fase 1 — no hay login de socios) y paga cada deuda por separado con Checkout Pro. El webhook distingue estos pagos por el prefijo `member_debt:` en `external_reference` y envía el comprobante por email.
+- **Fase 3 — Exportación legacy:** `src/lib/export.ts` genera el XLSX diario con ExcelJS (`GET /api/admin/export?competitionId&date`); cada generación queda auditada en `export_logs`. Los nombres exactos de columna que espera el import del sistema desktop del club **todavía no se validaron con el club** — están centralizados en `sheet.columns` de `export.ts` para ajustarlos en una sola pasada.
+- **Fase 4 — Dashboard tesorería:** el webhook inserta todo pago aprobado (inscripciones y socios) en el ledger `payment_events`; `GET /api/admin/dashboard` agrega totales y últimos pagos para el tab "Dashboard" del panel admin. Las notificaciones por WhatsApp (ítem opcional del plan) quedaron fuera de alcance.
+
+Guía de setup y pruebas: [`docs/fase2-4-setup.md`](./fase2-4-setup.md).

@@ -3,6 +3,8 @@
 Comparison of the Technical Brief ("Brief Técnico, Junio 2025" — source document: [`Brief_Tecnico_Sistema_Equitacion.docx`](./docs/Brief_Tecnico_Sistema_Equitacion.docx)) against the current Club Hípico Argentino codebase, and a proposed plan to close the gap.
 
 > **Nota (Fase 1, actualización):** el stack que realmente se usó para construir Fase 1 difiere de la "Architecture Proposal" de este documento (que proponía Prisma + NextAuth.js). La spec del cliente en [`docs/claude_code_prompt_equestrian_v2.md`](./docs/claude_code_prompt_equestrian_v2.md) — más nueva y autoritativa que este planning — pide explícitamente **no usar ORM ni librería de auth**: se usó el driver `pg` sin ORM y un secreto compartido (`ADMIN_SECRET`) en vez de NextAuth. El resto del roadmap de abajo (Fases 2-4) queda como contexto histórico y no se actualizó — ver [`docs/architecture.md`](./docs/architecture.md#fase-1--sistema-de-concursos-capa-nueva-coexiste-con-lo-de-arriba) y [`docs/fase1-setup.md`](./docs/fase1-setup.md) para el estado real de Fase 1.
+>
+> **Nota (Fases 2-4, actualización):** las Fases 2-4 ya están implementadas sobre el mismo stack de Fase 1 (sin Prisma/NextAuth): portal de socios con link permanente `/socios/[id]` (en vez del magic-link propuesto abajo), export XLSX diario y dashboard de tesorería. WhatsApp (opcional, Fase 4) quedó fuera de alcance. Estado real: [`docs/fase2-4-setup.md`](./docs/fase2-4-setup.md).
 
 ---
 

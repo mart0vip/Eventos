@@ -80,6 +80,85 @@ export async function createCheckoutPreference(params: {
   return { preferenceId: result.id, checkoutUrl: result.init_point };
 }
 
+/**
+ * Prefix that distinguishes a member-debt payment from a registration payment
+ * in `external_reference`. Fase 1 registrations use the bare registration UUID,
+ * so the webhook routes on this prefix: with it → member debt, without → registration.
+ */
+const MEMBER_DEBT_REF_PREFIX = "member_debt:";
+
+/** Builds the `external_reference` for a member-debt payment. */
+export function buildMemberDebtReference(debtId: string): string {
+  return `${MEMBER_DEBT_REF_PREFIX}${debtId}`;
+}
+
+export type ParsedExternalReference =
+  | { kind: "registration"; registrationId: string }
+  | { kind: "member_debt"; debtId: string };
+
+/** Resolves which domain entity a Mercado Pago `external_reference` points to. */
+export function parseExternalReference(reference: string): ParsedExternalReference {
+  if (reference.startsWith(MEMBER_DEBT_REF_PREFIX)) {
+    return { kind: "member_debt", debtId: reference.slice(MEMBER_DEBT_REF_PREFIX.length) };
+  }
+  return { kind: "registration", registrationId: reference };
+}
+
+/**
+ * Creates a Mercado Pago Checkout Pro preference for a socio's debt item
+ * (Fase 2 portal). Unlike registrations there is no slot hold behind this
+ * payment, so the preference carries no expiration — the link stays valid
+ * until the debt is paid. Same commission rule as registrations: the payer
+ * covers it (`marketplace_fee: 0`).
+ */
+export async function createDebtCheckoutPreference(params: {
+  debtId: string;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  conceptLabel: string;
+  dueDate: string;
+  amountArs: number; // centavos
+}): Promise<{ preferenceId: string; checkoutUrl: string }> {
+  const preference = new Preference(getConfig());
+
+  const result = await preference.create({
+    body: {
+      items: [
+        {
+          id: params.debtId,
+          title: `Club Hípico Argentino — ${params.conceptLabel}`,
+          description: `Socio: ${params.memberName} — vencimiento ${params.dueDate}`,
+          quantity: 1,
+          unit_price: params.amountArs / 100,
+          currency_id: "ARS" as const,
+        },
+      ],
+      payer: {
+        name: params.memberName,
+        email: params.memberEmail,
+      },
+      external_reference: buildMemberDebtReference(params.debtId),
+      back_urls: {
+        success: `${process.env.NEXT_PUBLIC_BASE_URL}/socios/${params.memberId}?pago=exito`,
+        failure: `${process.env.NEXT_PUBLIC_BASE_URL}/socios/${params.memberId}?pago=error`,
+        pending: `${process.env.NEXT_PUBLIC_BASE_URL}/socios/${params.memberId}?pago=pendiente`,
+      },
+      auto_return: "approved",
+      notification_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/mercadopago`,
+      statement_descriptor: "CLUB HIPICO",
+      // La comisión la paga el socio — el club recibe el monto neto de MP.
+      marketplace_fee: 0,
+    },
+  });
+
+  if (!result.id || !result.init_point) {
+    throw new Error("Mercado Pago no devolvió id/init_point para la preferencia creada");
+  }
+
+  return { preferenceId: result.id, checkoutUrl: result.init_point };
+}
+
 /** Fetches a payment's current status/details from Mercado Pago by id. */
 export async function getPayment(paymentId: string) {
   const payment = new Payment(getConfig());

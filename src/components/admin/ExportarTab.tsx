@@ -34,6 +34,9 @@ export default function ExportarTab({
 }: ExportarTabProps) {
   const { t } = useLanguage();
   const [rows, setRows] = useState<AdminRegistrationRow[]>([]);
+  const [exportDate, setExportDate] = useState("");
+  const [xlsxError, setXlsxError] = useState<"no_rows" | "error" | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!selectedCompetitionId) return;
@@ -66,6 +69,32 @@ export default function ExportarTab({
     );
   };
 
+  const handleXlsxDownload = async () => {
+    setDownloading(true);
+    setXlsxError(null);
+    try {
+      const res = await adminFetch(
+        `/api/admin/export?competitionId=${selectedCompetitionId}&date=${exportDate}`,
+        secret
+      );
+      if (!res.ok) {
+        setXlsxError(res.status === 404 ? "no_rows" : "error");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `planilla-${exportDate}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setXlsxError("error");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -89,6 +118,36 @@ export default function ExportarTab({
           <Download size={16} />
           {t("admin.downloadCsv")}
         </button>
+      )}
+
+      {selectedCompetitionId && (
+        <div className="bg-white rounded-xl border border-dust/50 p-5 max-w-md space-y-3">
+          <div>
+            <label className="text-sm font-semibold text-stable">{t("admin.exportDayField")}</label>
+            <input
+              type="date"
+              value={exportDate}
+              onChange={(e) => {
+                setExportDate(e.target.value);
+                setXlsxError(null);
+              }}
+              className="input-field"
+            />
+          </div>
+          <button
+            onClick={handleXlsxDownload}
+            disabled={!exportDate || downloading}
+            className="btn-primary text-sm py-2 disabled:opacity-50"
+          >
+            <Download size={16} />
+            {t("admin.downloadXlsx")}
+          </button>
+          {xlsxError && (
+            <p className="text-sm text-red-600">
+              {xlsxError === "no_rows" ? t("admin.exportNoRows") : t("admin.exportError")}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

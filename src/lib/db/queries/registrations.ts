@@ -251,6 +251,67 @@ export async function listConfirmedRegistrationsForCompetition(
   }));
 }
 
+export interface DailyExportRow {
+  eventName: string;
+  category: string;
+  drawOrder: number | null;
+  participantName: string;
+  horseName: string;
+  licenseNumber: string | null;
+  boxRequested: boolean;
+  participantEmail: string;
+  /** Centavos ARS: precio de la prueba + box del concurso si fue solicitado. */
+  totalArs: number;
+  mpPaymentId: string | null;
+}
+
+/**
+ * Lists every confirmed registration for one competition day (`day_date`),
+ * shaped for the Fase 3 legacy XLSX export: one row per registration with the
+ * amount owed (prueba price + box if requested) and the Mercado Pago payment id.
+ */
+export async function listConfirmedRegistrationsForDay(
+  competitionId: string,
+  date: string
+): Promise<DailyExportRow[]> {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    `SELECT
+       e.name AS event_name,
+       e.category AS category,
+       r.draw_order AS draw_order,
+       b.participant_name AS participant_name,
+       b.horse_name AS horse_name,
+       b.license_number AS license_number,
+       r.box_requested AS box_requested,
+       b.participant_email AS participant_email,
+       (e.price_ars + CASE WHEN r.box_requested THEN c.box_price_ars ELSE 0 END)::int
+         AS total_ars,
+       r.mp_payment_id AS mp_payment_id
+     FROM registrations r
+     JOIN events e ON e.id = r.event_id
+     JOIN competition_days d ON d.id = e.day_id
+     JOIN competitions c ON c.id = d.competition_id
+     JOIN binomios b ON b.id = r.binomio_id
+     WHERE d.competition_id = $1 AND d.day_date = $2 AND r.status = 'confirmed'
+     ORDER BY e.name, r.draw_order NULLS LAST, b.participant_name`,
+    [competitionId, date]
+  );
+
+  return rows.map((row) => ({
+    eventName: row.event_name,
+    category: row.category,
+    drawOrder: row.draw_order,
+    participantName: row.participant_name,
+    horseName: row.horse_name,
+    licenseNumber: row.license_number,
+    boxRequested: row.box_requested,
+    participantEmail: row.participant_email,
+    totalArs: row.total_ars,
+    mpPaymentId: row.mp_payment_id,
+  }));
+}
+
 export interface DebtItem {
   concept: string;
   amountArs: number;

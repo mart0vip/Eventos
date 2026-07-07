@@ -6,6 +6,7 @@ import {
   Registration,
   WaitlistEntry,
 } from "@/types/competition";
+import { Member, MemberDebt } from "@/types/member";
 
 /** Maps a raw `competitions` row (snake_case) to the `Competition` domain type. */
 export function mapCompetitionRow(row: Record<string, unknown>): Competition {
@@ -85,5 +86,31 @@ export function mapWaitlistRow(row: Record<string, unknown>): WaitlistEntry {
     binomioId: row.binomio_id as string,
     createdAt: row.created_at as string,
     notifiedAt: (row.notified_at as string | null) ?? null,
+  };
+}
+
+/** Maps a raw `members` row to the `Member` domain type. */
+export function mapMemberRow(row: Record<string, unknown>): Member {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    email: row.email as string,
+    memberNumber: row.member_number as string,
+    createdAt: row.created_at as string,
+  };
+}
+
+/** Maps a raw `member_debts` row to the `MemberDebt` domain type. */
+export function mapMemberDebtRow(row: Record<string, unknown>): MemberDebt {
+  return {
+    id: row.id as string,
+    memberId: row.member_id as string,
+    concept: row.concept as MemberDebt["concept"],
+    amountArs: row.amount_ars as number,
+    dueDate: row.due_date as string,
+    paidAt: (row.paid_at as string | null) ?? null,
+    mpPreferenceId: (row.mp_preference_id as string | null) ?? null,
+    mpPaymentId: (row.mp_payment_id as string | null) ?? null,
+    createdAt: row.created_at as string,
   };
 }
