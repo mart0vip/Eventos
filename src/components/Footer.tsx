@@ -4,14 +4,6 @@ import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { FacebookIcon, InstagramIcon } from "@/components/icons/SocialIcons";
 
-const footerCategories = [
-  "show-jumping",
-  "dressage",
-  "cross-country",
-  "trail-ride",
-  "polo",
-] as const;
-
 export default function Footer() {
   const { t } = useLanguage();
   const year = new Date().getFullYear();
@@ -19,8 +11,8 @@ export default function Footer() {
   return (
     <footer className="bg-charcoal text-dust mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
             <div className="flex items-center gap-3 mb-4">
               <img src="/logo-white.png" alt="Club Hípico Argentino" width={48} height={48} className="h-12 w-12" />
               <span className="text-lg font-heading font-bold text-white">
@@ -58,31 +50,15 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/events" className="hover:text-leather-light transition-colors">
-                  {t("footer.browseEvents")}
+                <Link href="/concursos" className="hover:text-leather-light transition-colors">
+                  {t("footer.concursos")}
                 </Link>
               </li>
               <li>
-                <Link href="/events/create" className="hover:text-leather-light transition-colors">
-                  {t("footer.createEvent")}
+                <Link href="/admin" className="hover:text-leather-light transition-colors">
+                  {t("footer.adminPanel")}
                 </Link>
               </li>
-              <li>
-                <Link href="/my-events" className="hover:text-leather-light transition-colors">
-                  {t("footer.myRegistrations")}
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-heading font-bold text-leather-light mb-4">
-              {t("footer.eventTypes")}
-            </h4>
-            <ul className="space-y-2 text-sm">
-              {footerCategories.map((cat) => (
-                <li key={cat}>{t(`categories.${cat}`)}</li>
-              ))}
             </ul>
           </div>
 

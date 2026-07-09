@@ -4,6 +4,13 @@ Todos los cambios notables de este proyecto se documentan en este archivo, sigui
 
 ## [0.3.0] - Unreleased
 
+### Removed
+
+- Se retiró por completo la demo original en inglés (`/`, `/events`, `/events/[id]`, `/events/create`, `/my-events`, `/club`), su capa de datos en `localStorage` (`src/store/events.ts`, `src/types/event.ts`) y sus componentes exclusivos (`EventCard`, `EventsContent`, `HeroSection`, `RegistrationModal`, `CategoryFilter`). `/` ahora redirige a `/concursos`.
+- Se quitó la dependencia `uuid`/`@types/uuid` (solo la usaba el store retirado).
+- Se eliminaron los namespaces de traducción exclusivos de la demo (`hero`, `categories`, `eventCard`, `registration`, `home`, `eventsPage`, `eventDetail`, `createEvent`, `myEvents`, `club`) de `src/i18n/translations.ts`, y se recortaron `nav`/`footer` a las claves que sigue usando el sistema real.
+- `Navbar` y `Footer` ya no muestran enlaces a las rutas retiradas.
+
 ### Added
 
 - Fase 2 — Portal de socios: alta de socios y carga de deudas (cuota, pensión, ropero, otro) desde el nuevo tab "Socios" del panel admin; portal público `/socios/[id]` con link permanente por socio, desglose de deuda y pago online por ítem vía Mercado Pago; comprobante automático por email al confirmarse el pago (webhook).

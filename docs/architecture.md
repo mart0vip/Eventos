@@ -7,164 +7,135 @@ This document explains how the Club Hípico Argentino app is built and why, so f
 | Layer | Choice | Why |
 |---|---|---|
 | Framework | Next.js 16 (App Router, Turbopack) | File-based routing, fast dev server, no need for a custom build setup. |
-| Language | TypeScript | Static types for `Event`/`Registration` shapes shared across every page. |
-| UI | React 19, all components `"use client"` | The app has no server-rendered data — every page reads from `localStorage`, so there's no benefit to Server Components here. |
-| Styling | Tailwind CSS v4 with a custom `@theme` | Equestrian color palette (saddle brown, forest green, cream, gold) and reusable utility classes (`.btn-primary`, `.card-hover`, `.input-field`, etc.) defined once in `src/app/globals.css`. |
+| Language | TypeScript (strict) | Static types for the competition/registration/member shapes shared across API routes and pages. |
+| UI | React 19 | Server Components for read-only pages where possible; interactive forms/tabs are `"use client"`. |
+| Styling | Tailwind CSS v4 with a custom `@theme` | Club Hípico Argentino brand palette and typography (see `docs/MarcaCHA.md`) and reusable utility classes (`.btn-primary`, `.card-hover`, `.input-field`, etc.) defined once in `src/app/globals.css`. |
+| Fonts | `next/font/google` (Montserrat + Open Sans) | Loaded once in `src/app/layout.tsx` as CSS variables (`--font-montserrat`, `--font-open-sans`); no external font requests at runtime. |
 | Icons | lucide-react | Lightweight, tree-shakeable icon set. |
 | Dates | date-fns (+ `date-fns/locale`) | Locale-aware formatting (`es`/`en`) and `parseISO` for correct date-only parsing (see [Pitfalls](#pitfalls-and-non-obvious-decisions)). |
-| IDs | uuid | Client-generated IDs for events/registrations since there's no backend to assign them. |
-| Persistence | `localStorage` | No backend exists. `src/store/events.ts` is the entire data layer. |
+| Data | PostgreSQL, raw `pg` driver (no ORM) | `src/lib/db/` — see [Database](#database-srclibdb). |
+| Payments | Mercado Pago Checkout Pro | `src/lib/mercadopago.ts` + webhook at `src/app/api/webhooks/mercadopago/route.ts` — see [Mercado Pago integration](#mercado-pago-integration). |
+| Email | Resend | `src/lib/email.ts` — confirmation/receipt emails sent from the webhook, never from the frontend. |
+| Spreadsheets | ExcelJS | `src/lib/export.ts` — daily XLSX export for the club's legacy desktop system. |
+| Auth | Shared secret (`ADMIN_SECRET`) | No user accounts. See [Known limitations](#known-limitations). |
 | i18n | Custom React Context (`src/i18n/`) | No locale-routing requirement, so a full library (`next-intl`) would add routing/middleware complexity the app doesn't need. |
-
-There is **no backend, no database, and no authentication**. Every route is reachable by anyone; all "admin" actions in the club panel are open to all visitors. This is a deliberate scope boundary — see [Known limitations](#known-limitations).
 
 ## Directory layout
 
 ```
 src/
-├── app/                    # Next.js App Router pages (one folder per route)
-│   ├── page.tsx                  → /
-│   ├── events/page.tsx           → /events            (browse/search/filter)
-│   ├── events/[id]/page.tsx      → /events/:id         (detail + registration)
-│   ├── events/create/page.tsx    → /events/create      (event creation form)
-│   ├── my-events/page.tsx        → /my-events          (rider's own registrations)
-│   ├── club/page.tsx             → /club               (club management panel)
-│   ├── layout.tsx                # Root layout — wraps everything in LanguageProvider
-│   └── globals.css               # Tailwind theme tokens + custom utility classes
-├── components/              # Shared, reusable UI pieces
-├── i18n/                     # Translation dictionary + LanguageContext
-├── lib/                      # Generic, framework-agnostic utilities (CSV export)
-├── store/                    # The entire data layer (localStorage read/write)
-└── types/                    # Shared TypeScript interfaces (Event, Registration)
+├── app/
+│   ├── page.tsx                              → /                    (redirects to /concursos)
+│   ├── concursos/page.tsx                    → /concursos           (public listing)
+│   ├── concursos/[id]/page.tsx                → /concursos/:id       (detail + inscripción)
+│   ├── inscripcion/gracias|error|pendiente/    → post-payment landing pages
+│   ├── socios/[id]/page.tsx                   → /socios/:id          (member debt portal, public link)
+│   ├── admin/page.tsx                         → /admin               (protected by ADMIN_SECRET)
+│   ├── api/                                    # route handlers, see Routing & API below
+│   ├── layout.tsx                             # root layout — fonts + LanguageProvider
+│   └── globals.css                             # Tailwind theme tokens + custom utility classes
+├── components/
+│   ├── admin/                                  # the 7 tabs of the /admin panel
+│   └── icons/                                  # SocialIcons (Facebook/Instagram)
+├── i18n/                                       # translation dictionary + LanguageContext
+├── lib/
+│   ├── db/                                     # Postgres client, query functions, migrations, seed
+│   ├── auth/admin-secret.ts                    # requireAdminSecret() route guard
+│   ├── adminSecret.ts                          # client-side sessionStorage helper + adminFetch()
+│   ├── validation/                             # zod schemas
+│   ├── mercadopago.ts                          # checkout preferences + webhook signature verification
+│   ├── email.ts                                # Resend confirmation/receipt emails
+│   ├── export.ts                               # daily XLSX export (ExcelJS)
+│   ├── csv.ts                                  # client-side CSV download util
+│   └── debtConcepts.ts                         # label lookup for debt concepts (cuota/pensión/ropero/otro)
+└── types/                                      # competition.ts, member.ts
 ```
+
+`src/lib/adminSecret.ts` and `src/lib/auth/admin-secret.ts` are two different files despite the near-identical name: the first is a client-side helper (stores the secret in `sessionStorage`, wraps `fetch`), the second is the server-side route guard. Don't conflate them when reading or testing this codebase.
 
 ## Data model
 
-Defined in `src/types/event.ts`.
+Defined in `src/types/competition.ts` and `src/types/member.ts`. Schema in `src/lib/db/migrations/001_initial.sql` (competitions → competition_days → events/pruebas → binomios → registrations → waitlist) and `002_fase2_socios.sql` (members → member_debts, plus `payment_events` for the treasury ledger).
 
-### `Event`
+Key entities:
+- **Competition / CompetitionDay / Event ("prueba")**: a competition spans one or more days, each day has one or more pruebas (jumping classes) riders register for.
+- **Binomio**: a rider+horse pair, deduplicated by `findOrCreateBinomio` (`ON CONFLICT ... DO UPDATE` on email+horse — same pair reuses the same id across competitions, most-recent-name-wins on conflict).
+- **Registration**: an inscripción to a specific prueba. Created with a 15-minute payment hold (`status: "pending"` + `hold_expires_at`), confirmed only by the Mercado Pago webhook, never by the frontend.
+- **Member / MemberDebt**: a socio and their itemized debts (cuota, pensión, ropero, otro), each payable independently via its own Checkout Pro preference.
+- **PaymentEvent**: an append-only ledger row inserted by the webhook for every approved payment (registration or member debt), deduplicated on `mp_payment_id` — this is what the treasury dashboard aggregates.
 
-The core entity. Created via the "Create Event" form or seeded as demo data.
+## Database (`src/lib/db/`)
 
-```ts
-interface Event {
-  id, title, description, date, endDate?, time, endTime?,
-  location, address, category: EventCategory, image,
-  price, currency, capacity, registered, organizer, tags[],
-  status: "upcoming" | "ongoing" | "past" | "cancelled",
-  isFeatured: boolean, createdAt,
-  autoPromoteWaitlist?: boolean,   // per-event waitlist behavior, see below
-}
-```
+- **`client.ts`**: a single `pg.Pool`, one module-level instance reused across requests (Next.js dev-mode HMR-safe via a global cache, same pattern as the common Prisma singleton workaround).
+- **`queries/*.ts`**: one file per entity (`competitions`, `events`, `binomios`, `registrations`, `waitlist`, `members`, `paymentEvents`, `exportLogs`). All SQL lives here — no query strings elsewhere in the codebase.
+- **`mappers.ts`**: converts snake_case DB rows to camelCase domain objects (`mapCompetitionRow`, `mapMemberRow`, `mapMemberDebtRow`, etc.).
+- **`migrate.ts`** / **`migrations/*.sql`**: a minimal hand-rolled runner (no migration framework) — applies `.sql` files in filename order, tracked in a `schema_migrations` table.
+- **Idempotency patterns used throughout**: `ON CONFLICT ... DO NOTHING`/`DO UPDATE` for webhook retries (`insertPaymentEvent` on `mp_payment_id`, `findOrCreateBinomio` on email+horse), and guarded `UPDATE ... WHERE x IS NULL` for one-way state transitions driven by the webhook (`confirmRegistration`, `markDebtPaid`) — a retried webhook call is always safe to re-run.
 
-`registered` is a **denormalized counter** — it only counts `"confirmed"` registrations' ticket counts, kept in sync by `src/store/events.ts` every time a registration is created, cancelled, or promoted. It is never derived on the fly from the registrations list, to keep capacity checks (`event.registered + tickets > event.capacity`) a cheap O(1) comparison.
+## Routing & API
 
-`EventCategory` is a fixed union (`show-jumping`, `dressage`, `cross-country`, `polo`, `rodeo`, `trail-ride`, `clinic`, `auction`, `social`, `other`). Each category has a fixed emoji icon (`categoryIcons`, language-independent) and a translated label (`t('categories.<key>')`, language-dependent) — icons and labels are deliberately split between `types/event.ts` and `i18n/translations.ts` so adding a language never touches the icon set.
+| Route | Purpose |
+|---|---|
+| `/` | Redirects to `/concursos`. |
+| `/concursos` | Public listing of open competitions. |
+| `/concursos/[id]` | Anteprograma by day/prueba, inline inscripción with box reservation and payment countdown. |
+| `/inscripcion/gracias` \| `/error` \| `/pendiente` | Post-checkout landing pages; `gracias` polls the registration status since Mercado Pago's redirect can arrive before the webhook has confirmed. |
+| `/socios/[id]` | Public, permanent per-member link (non-enumerable UUID acts as the implicit credential — no socio login) showing debt breakdown and per-item payment. |
+| `/admin` | Protected by `ADMIN_SECRET` (header or `?secret=` query param, see `requireAdminSecret`). Tabs: Anteprograma, Inscriptos, Sorteo, Deuda, Socios, Dashboard, Exportar. |
+| `/api/competitions`, `/api/competitions/[id]`, `/api/competitions/[id]/debt/[binomioId]` | Public read endpoints. |
+| `/api/registrations`, `/api/registrations/[id]` | Create/read a registration (creates the payment hold + Checkout Pro preference). |
+| `/api/members`, `/api/members/[id]/debts`, `/api/members/debts/[debtId]/pay` | Public-by-design (same UUID-as-credential posture as the debt lookup route above). |
+| `/api/admin/**` | All protected by `requireAdminSecret`: competitions CRUD, days/events CRUD, draw (`Fisher-Yates`, only once inscriptions are closed), registrations list, release-expired-holds (also accepts `Bearer <CRON_SECRET>` for the Vercel Cron caller), export, dashboard. |
+| `/api/webhooks/mercadopago` | Single source of truth for payment confirmation — see below. |
 
-### `Registration`
+### Registration & payment flow
 
-```ts
-interface Registration {
-  id, eventId, name, email, phone, tickets, notes,
-  horseName, insuranceExpiry, healthBookletExpiry,
-  registeredAt,
-  status: "confirmed" | "pending" | "cancelled" | "waitlisted",
-}
-```
+1. `POST /api/registrations` calls `createRegistrationWithHold`: checks for an existing non-cancelled registration for the same binomio+prueba first, *then* checks remaining capacity (this ordering matters — checking capacity first would let a duplicate submission consume a slot before the duplicate-check ever ran) — returns `no_slots`, `duplicate`, or the created hold (`status: "pending"`, 15-minute `hold_expires_at`).
+2. A Checkout Pro preference is created (`createCheckoutPreference` in `mercadopago.ts`) and the rider is redirected to Mercado Pago.
+3. `releaseExpiredHolds` (called by `/api/admin/release-expired-holds`, wired to Vercel Cron in production and `npm run dev:cron` locally) releases any hold past its `hold_expires_at` back to available capacity and notifies the next waitlisted binomio, if any.
+4. The Mercado Pago webhook is the **only** thing that confirms a registration or releases its slot on rejection — the frontend never assumes payment success from the checkout redirect alone, since Mercado Pago's redirect and webhook delivery are not ordered relative to each other.
 
-`horseName`, `insuranceExpiry`, `healthBookletExpiry` are hípica-specific fields captured at registration time (not bolted on after the fact) — this is what differentiates the registration form from a generic Wix Events form, and what the club panel surfaces/flags/exports.
+### Mercado Pago integration
 
-`"pending"` exists in the type union for forward-compatibility (e.g. a future payment-confirmation step) but nothing currently sets it — every registration is created as either `"confirmed"` or `"waitlisted"`.
+- **Checkout preferences**: `createCheckoutPreference` (registrations) and `createDebtCheckoutPreference` (member debts) in `src/lib/mercadopago.ts`, both using the plain UUID or a `member_debt:`-prefixed UUID as `external_reference` so the webhook can route without an extra DB lookup.
+- **Webhook** (`src/app/api/webhooks/mercadopago/route.ts`): verifies the signature via `verifyWebhookSignature` (HMAC-SHA256 over `id:{id};request-id:{req};ts:{ts};`, using the official `mercadopago` SDK's `WebhookSignatureValidator`) before touching the DB. Branches on the `external_reference` prefix: no prefix → registration (`confirmRegistration` on `approved`, release + waitlist notification on `rejected`/`cancelled`); `member_debt:` prefix → `markDebtPaid`. Every approved payment is also inserted into `payment_events` (deduplicated on `mp_payment_id`). The route always returns `200`, even on an internal error, per Mercado Pago's own retry semantics — a non-200 response causes MP to retry indefinitely, which is the wrong failure mode for a bug on our side.
 
-## The store: `src/store/events.ts`
+### Exportación legado y dashboard de tesorería
 
-This file is the single source of truth for all reads/writes. Every component goes through it — no component touches `localStorage` directly.
-
-- **Two keys**: `equestrian_events` and `equestrian_registrations`, each a flat JSON array.
-- **`initializeEvents()`**: seeds `equestrian_events` with 8 demo events (in Spanish) the first time the app runs, if the key doesn't exist yet. Called once per page mount (idempotent — does nothing if data already exists).
-- **Read functions** (`getEvents`, `getEvent`, `getFeaturedEvents`, `getEventsByCategory`, `searchEvents`, `getRegistrations`, `getWaitlist`) are pure: read from storage, filter/sort, return. No caching layer — every call re-reads `localStorage` and re-parses JSON. This is intentionally simple; the dataset is small (a handful of events/registrations) so the cost is negligible, and avoiding a cache sidesteps any staleness bugs between tabs/components.
-- **Write functions** (`createEvent`, `updateEvent`, `deleteEvent`, `registerForEvent`, `cancelRegistration`, `promoteFromWaitlist`) read the full array, mutate it in memory, and write the whole array back. There's no concurrency control because there's only one writer (the current browser tab).
-
-### Capacity & waitlist logic
-
-This is the most stateful part of the app, so it's worth spelling out exactly:
-
-1. **`registerForEvent`**: computes `wouldExceedCapacity = event.registered + tickets > event.capacity`. If true → registration saved with `status: "waitlisted"`, and `event.registered` is **not** incremented (waitlisted people don't count against capacity). If false → `status: "confirmed"`, `event.registered += tickets`.
-2. **`cancelRegistration`**: only decrements `event.registered` if the registration being cancelled was `"confirmed"` (cancelling an already-waitlisted or already-cancelled registration is a no-op on capacity). If the event has `autoPromoteWaitlist: true`, it then automatically promotes the earliest waitlisted registration (FIFO by `registeredAt`) via `promoteFromWaitlist`.
-3. **`promoteFromWaitlist`**: flips a registration to `"confirmed"` and increments `event.registered`. This always succeeds when called — there's no re-check against capacity, because the only caller (the club panel's "Promover" button, or the auto-promote path after a cancellation) is acting on a freshly-freed spot. A club staffer can still manually promote someone even if it overbooks the event; this is intentional (trust the human decision over a hard rule).
-4. **`getWaitlist(eventId)`**: returns waitlisted registrations sorted oldest-first — this ordering **is** the waitlist position; there's no separate `position` field.
-
-Waitlist promotion is **manual by default** (club panel "Promover" button) with an explicit per-event opt-in (`Event.autoPromoteWaitlist`, toggled from the club panel) for automatic promotion. This was a deliberate product decision — see the planning history for this feature if you need the reasoning.
-
-## Routing & pages
-
-| Route | Purpose | Notable behavior |
-|---|---|---|
-| `/` | Landing page | Hero, featured events, upcoming events, category grid, feature highlights. |
-| `/events` | Browse/search | Wrapped in `<Suspense>` because it reads `useSearchParams()` (for `?q=` and `?category=` deep links from the homepage). |
-| `/events/[id]` | Event detail + registration | Branches its post-registration success UI on the registration's returned `status` (`"confirmed"` vs `"waitlisted"`) — see [Registration flow](#registration-flow). |
-| `/events/create` | Create event | Plain form → `createEvent()` → redirect to the new event's detail page. |
-| `/my-events` | Rider's registrations | Reads **all** registrations from storage (no user accounts, so "my" really means "every registration ever made in this browser") and joins each to its event. |
-| `/club` | Club management panel | See below. |
-
-### Registration flow
-
-`RegistrationModal` is a shared component opened from `/events/[id]`. On submit it calls `registerForEvent()` and passes the **resulting status** back up via `onSuccess(status)` — the caller never assumes success means "confirmed". The modal's own UI also reacts to capacity before submission: when `spotsLeft <= 0` the submit button is **not disabled**, it relabels itself "Unirme a la Lista de Espera" / "Join Waitlist" and the form still submits (intentionally — registering into a full event is exactly how the waitlist gets populated; disabling submission would make the waitlist feature unreachable from the public side).
-
-### Club management panel (`/club`)
-
-**No auth gate — open to anyone.** Unlike the rest of the app (where "open to anyone" just means no login), this screen surfaces personal data and destructive actions, so this is a real exposure, not just a UX gap — see [Known limitations](#known-limitations). It is the only screen that:
-- Aggregates registrations **across all events**, grouped by `EventCategory` (counts of confirmed vs. waitlisted), answering "how many people are registered per category club-wide."
-- Lets staff select a single event and see/manage its confirmed registrants and waitlist as tables, with expired `insuranceExpiry`/`healthBookletExpiry` visually flagged (red text + "(vencido)"/"(expired)") by comparing against `new Date()` at render time — flagging is purely a UI concern, the raw dates are unaffected.
-- Exposes `cancelRegistration` and `promoteFromWaitlist` as row-level actions, and `autoPromoteWaitlist` as a per-event checkbox (persisted via `updateEvent`).
-- Exports the confirmed-registrant table as CSV via `downloadCsv()`.
+- **`GET /api/admin/export?competitionId&date`** (`src/lib/export.ts`): generates the daily XLSX the club's legacy desktop system imports, via ExcelJS; every generation is logged to `export_logs`. The exact column names the desktop import expects haven't been validated against the real legacy system yet — they're centralized in `sheet.columns` so they can be adjusted in one pass once confirmed.
+- **`GET /api/admin/dashboard`**: aggregates `payment_events` into totals (by registration vs. member debt) and a recent-payments list, backing the admin panel's "Dashboard" tab.
 
 ## CSV export (`src/lib/csv.ts`)
 
-A small, dependency-free utility: `downloadCsv(filename, rows)` builds an RFC-4180-escaped CSV string (quoting fields containing commas/quotes/newlines, doubling embedded quotes), prepends a UTF-8 BOM (`﻿`) so Excel correctly renders accented Spanish characters, wraps it in a `Blob`, and triggers a download through a temporary anchor element. No server round-trip — this only works because the data already lives in the browser.
-
-Column headers in the exported CSV are the **translated** column labels (`t('club.col*')`) for the language active at export time, not hardcoded English — so a Spanish-language session exports a Spanish-header CSV.
+A small, dependency-free client-side utility used by the "Inscriptos" and "Exportar" admin tabs: `downloadCsv(filename, rows)` builds an RFC-4180-escaped CSV string (quoting fields containing commas/quotes/newlines, doubling embedded quotes), prepends a UTF-8 BOM so Excel correctly renders accented Spanish characters, wraps it in a `Blob`, and triggers a download through a temporary anchor element. This is separate from the XLSX export above (`export.ts`) — CSV is a same-tab client-side download, XLSX is a server-generated file for the club's legacy import.
 
 ## Internationalization (`src/i18n/`)
 
-- **`translations.ts`**: two flat nested objects (`es`, `en`), each namespaced by feature area (`nav`, `footer`, `hero`, `categories`, `eventCard`, `registration`, `home`, `eventsPage`, `eventDetail`, `createEvent`, `myEvents`, `club`). Every key must exist in both languages — there's no fallback-to-English-string behavior; a missing key returns the dot-path itself (e.g. `"club.colName"`), which makes missing translations obvious during manual QA instead of silently degrading.
-- **`LanguageContext.tsx`**: `LanguageProvider` holds `language` state defaulting to `"es"` (Spanish is the default language for the whole app), persisted to `localStorage["equestrian_language"]`, read back in a `useEffect` on mount (client-only, matching the same pattern as `initializeEvents`). Exposes `useLanguage()` (→ `{ language, setLanguage, t }`) and `useDateLocale()` (→ the matching `date-fns/locale` object, `es` or `enUS`).
-- **`t(path, vars?)`**: dot-path lookup (`"namespace.key"`) with `{varName}` interpolation (e.g. `t("eventCard.spotsLeft", { n: 3 })` → `"¡quedan 3 lugares!"`). No pluralization rules, ICU message format, or nesting beyond one level — deliberately minimal since the app's copy doesn't need more than that.
-- Every component that renders user-facing text is a client component calling `useLanguage()` — there are no server-rendered translated strings.
+- **`translations.ts`**: two flat nested objects (`es`, `en`), namespaced by feature area (`common`, `nav`, `footer`, `concursos`, `concursoDetail`, `inscripcionForm`, `inscripcionHold`, `inscripcionGracias`, `socios`, `admin`). Every key must exist in both languages — there's no fallback-to-English-string behavior; a missing key returns the dot-path itself (e.g. `"admin.someKey"`), which makes missing translations obvious during manual QA instead of silently degrading.
+- **`LanguageContext.tsx`**: `LanguageProvider` holds `language` state defaulting to `"es"` (Spanish is the default language for the whole app), persisted to `localStorage`, read back in a `useEffect` on mount. Exposes `useLanguage()` (→ `{ language, setLanguage, t }`) and `useDateLocale()` (→ the matching `date-fns/locale` object, `es` or `enUS`).
+- **`t(path, vars?)`**: dot-path lookup (`"namespace.key"`) with `{varName}` interpolation. No pluralization rules, ICU message format, or nesting beyond one level — deliberately minimal since the app's copy doesn't need more than that.
 
 ## Pitfalls and non-obvious decisions
 
-- **Date parsing**: `event.date`/`event.endDate` are date-only strings (`"2026-07-15"`). They are parsed with `date-fns`'s `parseISO`, **never** the native `new Date(...)` constructor. `new Date("2026-07-15")` is parsed as UTC midnight, and formatting it in a browser timezone behind UTC silently displays the *previous* day. `parseISO` parses date-only strings as local midnight instead, avoiding the bug. Full timestamps (`registeredAt`, `createdAt`) don't have this problem and are parsed with the native constructor as usual.
-- **`event.registered` is a counter, not a derived value.** If you add a new code path that changes registration status, you must update `event.registered` there too (see [Capacity & waitlist logic](#capacity--waitlist-logic)) — it will not "just work" by recomputing from the registrations array.
-- **No `next/font`, no Geist font.** The default `create-next-app` font setup was replaced with Tailwind theme tokens (`--font-heading`: Georgia serif, `--font-body`: system sans) to fit the equestrian branding.
-- **Seed data is Spanish-only**, not bilingual. The 8 demo events were deliberately rewritten in Spanish rather than maintained as parallel `es`/`en` datasets — they're static demo content, not something a real club would expect to be auto-translated (real event titles/descriptions are user-generated, like the UI's own copy, not app chrome).
+- **Date parsing**: date-only columns (competition dates, debt due dates, etc.) are DATE columns in Postgres and are parsed with `date-fns`'s `parseISO`, **never** the native `new Date(...)` constructor. `new Date("2026-07-15")` is parsed as UTC midnight, and formatting it in a browser timezone behind UTC silently displays the *previous* day; `parseISO` parses date-only strings as local midnight instead, avoiding the bug. This was a real bug fixed during Fase 1 — see the `client.ts`/DATE-column handling for where it's guarded.
+- **Two `Registration` types exist in the codebase** by name only — `types/competition.ts`'s `Registration` is the real one; if you ever see a reference to a `Registration` from `types/event.ts`, that was the retired demo app's type (removed — see below) and no longer exists.
+- **Webhook idempotency is load-bearing, not defensive fluff.** `insertPaymentEvent`, `confirmRegistration`, `markDebtPaid` are all designed to be safely re-run with the same webhook payload (Mercado Pago retries on anything but a `200`). Any new webhook-driven write must follow the same `ON CONFLICT`/guarded-`UPDATE` pattern or a retry will double-count a payment or double-send an email.
+- **Draw order (`sorteo`) is only ever run once inscriptions are closed** — `bulkSetDrawOrder` doesn't itself enforce this, the `/admin` "Sorteo" tab does, at the UI level.
 
 ## Known limitations
 
 These are intentional scope boundaries, not oversights:
 
-- **No authentication.** `/club` and `/events/create` are reachable by anyone. **Do not deploy this app publicly with real registrant data before adding auth** — `/club` exposes riders' PII (name, email, phone, horse name, insurance/health-booklet dates) to any visitor and lets them cancel registrations, promote waitlists, and toggle auto-promotion with no access control. Gating `/club` behind real auth is a prerequisite, not a nice-to-have, before an actual club uses this with real people's data.
-- **No backend / no multi-device sync.** Everything lives in one browser's `localStorage`. Registering on a phone and checking `/my-events` on a laptop will show nothing — there's no shared source of truth.
-- **No payment processing.** Prices are displayed and summed but `registerForEvent` never charges anything.
-- **No image upload.** Event images are URLs (defaults provided per category, or a user-supplied URL) — there's no file upload/storage.
+- **No real authentication.** `/admin` is protected by a single shared secret (`ADMIN_SECRET`), not a user-accounts system — anyone who has the secret has full admin access, and there's no per-user audit trail. **Do not expose the admin secret or deploy without HTTPS.** See `docs/fase1-setup.md`.
+- **The socios portal and member-debt/registration lookup routes use a non-enumerable UUID as their only access control** (no socio login). This is an accepted tradeoff for a v1 with no user-accounts system — see `docs/fase2-4-setup.md` before treating this as more secure than it is.
+- **WhatsApp notifications** (an optional item in the original Fase 4 scope) are out of scope — email via Resend is the only automated notification channel.
+- **Legacy export column names are unconfirmed.** `export.ts`'s XLSX output hasn't been validated against the club's actual legacy desktop import yet.
 
-## Fase 1 — Sistema de Concursos (capa nueva, coexiste con lo de arriba)
+## Retired: the original English demo app
 
-Todo lo descripto hasta acá (rutas `/`, `/events*`, `/my-events`, `/club`, el store en `src/store/events.ts`) sigue existiendo tal cual y **no se tocó**. A partir de la especificación en `docs/claude_code_prompt_equestrian_v2.md` se agregó, en paralelo, un segundo sistema con su propio backend:
+Earlier in this project's history there was a separate, unrelated demo app (`/events`, `/my-events`, `/club`, English-language, `localStorage`-backed via `src/store/events.ts`, no backend) that coexisted alongside the real system described above. It has since been deleted entirely — there is no remaining code, route, or dependency (`uuid`) from it in this repository. If you find a reference to it in an old commit or a stale doc, it no longer applies.
 
-- **Datos:** PostgreSQL real (`src/lib/db/`, driver `pg` sin ORM) en vez de `localStorage`. Ver `src/lib/db/migrations/001_initial.sql` para el schema completo (competitions → competition_days → events/pruebas → binomios → registrations → waitlist).
-- **Tipos:** `src/types/competition.ts` — a propósito **no** reutiliza los nombres `Event`/`Registration` de `src/types/event.ts` (son conceptos distintos: el nuevo `Registration` representa una inscripción a una prueba con pago vía Mercado Pago, no tiene relación con el `Registration` viejo).
-- **Rutas nuevas:** `/concursos`, `/concursos/[id]`, `/inscripcion/gracias|error|pendiente` (público) y `/admin` (protegido por `ADMIN_SECRET`, ver `src/lib/auth/admin-secret.ts`), más toda la API en `src/app/api/`.
-- **Por qué hay dos "Registration" en el código:** si en algún momento un archivo necesita importar ambos tipos, hay que aliasear uno (`import { Registration as LegacyRegistration } from "@/types/event"`) — documentado también en el propio `src/types/competition.ts`.
+## Further detail
 
-Detalle completo de setup, variables de entorno y qué se pudo verificar sin credenciales reales de Mercado Pago/Resend: [`docs/fase1-setup.md`](./fase1-setup.md).
-
-## Fases 2-4 — Portal de socios, exportación legacy y dashboard
-
-Sobre la misma capa de Fase 1 (mismo Postgres, mismo `ADMIN_SECRET`, mismo webhook de Mercado Pago) se implementaron las tres fases restantes del plan:
-
-- **Fase 2 — Portal de socios:** entidades `members`/`member_debts` (scaffoldeadas en la migración 001, activadas en `002_fase2_socios.sql`). El socio accede por link permanente `/socios/[id]` (UUID no enumerable, misma postura de acceso que la consulta de deuda de Fase 1 — no hay login de socios) y paga cada deuda por separado con Checkout Pro. El webhook distingue estos pagos por el prefijo `member_debt:` en `external_reference` y envía el comprobante por email.
-- **Fase 3 — Exportación legacy:** `src/lib/export.ts` genera el XLSX diario con ExcelJS (`GET /api/admin/export?competitionId&date`); cada generación queda auditada en `export_logs`. Los nombres exactos de columna que espera el import del sistema desktop del club **todavía no se validaron con el club** — están centralizados en `sheet.columns` de `export.ts` para ajustarlos en una sola pasada.
-- **Fase 4 — Dashboard tesorería:** el webhook inserta todo pago aprobado (inscripciones y socios) en el ledger `payment_events`; `GET /api/admin/dashboard` agrega totales y últimos pagos para el tab "Dashboard" del panel admin. Las notificaciones por WhatsApp (ítem opcional del plan) quedaron fuera de alcance.
-
-Guía de setup y pruebas: [`docs/fase2-4-setup.md`](./fase2-4-setup.md).
+- Fase 1 setup, environment variables, and what was verified without real Mercado Pago/Resend credentials: [`docs/fase1-setup.md`](./fase1-setup.md).
+- Fases 2-4 (socios, export legado, dashboard) setup and testing: [`docs/fase2-4-setup.md`](./fase2-4-setup.md).
