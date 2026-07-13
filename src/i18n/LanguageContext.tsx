@@ -38,6 +38,11 @@ export function LanguageProvider({
   useEffect(() => {
     const stored = localStorage.getItem(LANGUAGE_KEY);
     if (stored === "es" || stored === "en") {
+      // Deliberately not a lazy useState initializer: this only runs after
+      // hydration, so server and first client render both use the "es"
+      // default and match — reading localStorage synchronously during render
+      // would mismatch whenever the stored language is "en".
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLanguageState(stored);
     }
   }, []);

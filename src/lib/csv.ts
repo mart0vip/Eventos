@@ -1,4 +1,4 @@
-function escapeCsvValue(value: string | number): string {
+export function escapeCsvValue(value: string | number): string {
   const str = String(value);
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;

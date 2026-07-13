@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Mirrors docker-compose.yml's local Postgres, but on the default 5432 —
+    # unlike local dev there's no reason to dodge that port here. DATABASE_URL
+    # below overrides .env.test's local (5433) value accordingly.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: eventos
+          POSTGRES_USER: eventos
+          POSTGRES_PASSWORD: eventos_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U eventos -d eventos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://eventos:eventos_dev@localhost:5432/eventos_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Test with coverage (unit + integration, enforces the 80% gate)
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
