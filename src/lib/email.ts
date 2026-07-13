@@ -62,7 +62,7 @@ export async function sendMemberDebtReceiptEmail(
  * (inline styles only, no external CSS/assets) so it renders consistently
  * across email clients.
  */
-function buildConfirmationHtml(params: ConfirmationEmailParams): string {
+export function buildConfirmationHtml(params: ConfirmationEmailParams): string {
   const amountFormatted = formatArs(params.amountPaidArs);
   const row = buildRow;
 
@@ -110,7 +110,7 @@ function buildConfirmationHtml(params: ConfirmationEmailParams): string {
  * Renders the member-debt receipt email — same self-contained inline-styles
  * approach and visual shell as the registration confirmation.
  */
-function buildMemberDebtReceiptHtml(params: MemberDebtReceiptParams): string {
+export function buildMemberDebtReceiptHtml(params: MemberDebtReceiptParams): string {
   const amountFormatted = formatArs(params.amountPaidArs);
   const row = buildRow;
 

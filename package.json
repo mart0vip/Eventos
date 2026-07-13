@@ -7,9 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "type-check": "tsc --noEmit",
     "db:migrate": "tsx --env-file=.env.local src/lib/db/migrate.ts",
     "db:seed": "tsx --env-file=.env.local src/lib/db/seed-dev.ts",
-    "dev:cron": "tsx --env-file=.env.local scripts/dev-hold-cron.ts"
+    "db:test:create": "tsx --env-file=.env.test scripts/create-test-db.ts",
+    "db:test:migrate": "tsx --env-file=.env.test src/lib/db/migrate.ts",
+    "dev:cron": "tsx --env-file=.env.local scripts/dev-hold-cron.ts",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "pretest:integration": "npm run db:test:create && npm run db:test:migrate",
+    "test:integration": "vitest run --project integration",
+    "pretest:coverage": "npm run db:test:create && npm run db:test:migrate",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "date-fns": "^4.4.0",
@@ -21,20 +30,27 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.16.0",
-    "uuid": "^14.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "jsdom": "^29.1.1",
+    "msw": "^2.15.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
