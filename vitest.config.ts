@@ -59,6 +59,11 @@ export default defineConfig(({ mode }) => {
             env,
             include: ["**/*.integration.test.ts"],
             exclude: ["**/node_modules/**", "**/.next/**"],
+            // All integration files share one real Postgres database and each
+            // resetDb() TRUNCATEs every table — running files in parallel races
+            // one file's TRUNCATE against another's inserts (deadlocks/FK
+            // violations). Force sequential file execution for this project only.
+            fileParallelism: false,
           },
         },
       ],
