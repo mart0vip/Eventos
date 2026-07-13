@@ -2,7 +2,12 @@
 
 Todos los cambios notables de este proyecto se documentan en este archivo, siguiendo el formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
-## [0.3.0] - Unreleased
+## [0.3.0] - 2026-07-13
+
+### Added
+
+- Suite de tests (Vitest + React Testing Library + MSW) con cobertura ≥80% en statements/branches/functions/lines sobre Fase 1 + Fases 2-4 + código compartido: integration tests contra Postgres real (`eventos_test`) para toda la capa de queries, HMAC real para la verificación de firma del webhook de Mercado Pago, mocks para las 17 rutas de API y MSW/fake timers para páginas y componentes con fetch.
+- Primer CI de este repo (`.github/workflows/ci.yml`): lint, type-check y suite con cobertura contra un Postgres real como servicio, en cada PR.
 
 ### Removed
 
@@ -22,7 +27,7 @@ Todos los cambios notables de este proyecto se documentan en este archivo, sigui
 
 - El webhook de Mercado Pago ahora rutea por `external_reference`: los pagos de deudas de socio usan el prefijo `member_debt:` y los de inscripciones siguen usando el UUID pelado; todo pago aprobado se registra además en `payment_events`.
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-07-13
 
 ### Added
 
