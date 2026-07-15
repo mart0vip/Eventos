@@ -2,6 +2,13 @@
 
 Todos los cambios notables de este proyecto se documentan en este archivo, siguiendo el formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.3.1] - Unreleased
+
+### Added
+
+- `docs/project-review.md`: revisión completa del proyecto (código + documentación) con hallazgos priorizados y verificados contra el stack local — incluye dos hallazgos de alta prioridad sobre el webhook de Mercado Pago (unidad del `ts` en la ventana anti-replay; idempotencia incompleta de la rama de inscripciones).
+- `docs/user-journeys.md`: recorridos de usuario por rol (jinete, socio, administración, sistema) con el resultado de probarlos de punta a punta en el entorno local, y la guía para reproducirlos.
+
 ## [0.3.0] - 2026-07-13
 
 ### Added
